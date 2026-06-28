@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/products";
+import { products as staticProducts } from "@/lib/products";
 import { productFallbackImage } from "@/hooks/use-product-image";
 
 type ProductRow = {
@@ -89,11 +90,31 @@ export function useLiveProducts() {
     };
   }, []);
 
+  // Always show the built-in catalog. When Supabase rows are present they
+  // override the matching static product, and any DB-only products are
+  // appended. Archived/draft rows hide their matching static product.
+  const visibleRows = rows.filter(
+    (row) => row.status !== "archived" && row.status !== "draft",
+  );
+  const hiddenSlugs = new Set(
+    rows
+      .filter((row) => row.status === "archived" || row.status === "draft")
+      .map((row) => row.slug),
+  );
+  const rowBySlug = new Map(visibleRows.map((row) => [row.slug, row]));
+  const staticSlugs = new Set(staticProducts.map((product) => product.slug));
+
+  const merged = staticProducts
+    .filter((product) => !hiddenSlugs.has(product.slug))
+    .map((product) => mergeProductOverride(product, rowBySlug.get(product.slug)));
+
+  const liveOnly = visibleRows
+    .filter((row) => !staticSlugs.has(row.slug))
+    .map(productFromRow)
+    .filter((product): product is Product => Boolean(product));
+
   return {
-    products: rows
-      .filter((row) => row.status !== "archived" && row.status !== "draft")
-      .map(productFromRow)
-      .filter((product): product is Product => Boolean(product)),
+    products: [...merged, ...liveOnly],
     loading,
   };
 }

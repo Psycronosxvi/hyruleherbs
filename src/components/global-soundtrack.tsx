@@ -1,1 +1,121 @@
-﻿﻿import { useEffect, useMemo, useRef, useState } from "react";\n\ntype Props = {\n  tracks: Array<{ src: string; label?: string }>;\n  volume?: number; // 0..1\n};\n\nexport function GlobalSoundtrack({ tracks, volume = 0.35 }: Props) {\n  const audioRef = useRef<HTMLAudioElement | null>(null);\n  const [enabled, setEnabled] = useState(false);\n\n  const fallbackTracks = useMemo(() => {\n    // Ensure we have something to play; component will no-op otherwise.\n    return Array.isArray(tracks) && tracks.length > 0 ? tracks : [];\n  }, [tracks]);\n\n  function pickRandomTrack() {\n    if (fallbackTracks.length === 0) return null;\n    const idx = Math.floor(Math.random() * fallbackTracks.length);\n    return fallbackTracks[idx];\n  }\n\n  function startIfPossible() {\n    if (enabled) return;\n    setEnabled(true);\n\n    const audio = audioRef.current;\n    if (!audio) return;\n\n    const t = pickRandomTrack();\n    if (!t) return;\n\n    audio.src = t.src;\n\n    // Best-effort autoplay after user gesture; if blocked, browser may keep it paused.\n    void audio.play().catch(() => {\n      // If autoplay is blocked, it will start on next user gesture handler.\n    });\n  }\n\n  useEffect(() => {\n    const audio = audioRef.current;\n    if (!audio) return;\n\n    audio.volume = volume;\n    audio.loop = false;\n\n    const onEnded = () => {\n      const t = pickRandomTrack();\n      if (!t) return;\n      audio.src = t.src;\n      void audio.play().catch(() => undefined);\n    };\n\n    audio.addEventListener("ended", onEnded);\n    return () => {\n      audio.removeEventListener("ended", onEnded);\n    };\n  }, [volume]);\n\n  useEffect(() => {\n    // Browsers usually block autoplay until a user interacts.\n    const onFirstGesture = () => {\n      startIfPossible();\n      window.removeEventListener("pointerdown", onFirstGesture);\n      window.removeEventListener("keydown", onFirstGesture);\n      window.removeEventListener("touchstart", onFirstGesture);\n      window.removeEventListener("scroll", onFirstGesture);\n    };\n\n    window.addEventListener("pointerdown", onFirstGesture, { once: true });\n    window.addEventListener("keydown", onFirstGesture, { once: true });\n    window.addEventListener("touchstart", onFirstGesture, { once: true });\n    window.addEventListener("scroll", onFirstGesture, { once: true });\n\n    // Also try immediately (in case it already allowed).\n    void Promise.resolve().then(() => startIfPossible());\n\n    return () => {\n      window.removeEventListener("pointerdown", onFirstGesture);\n      window.removeEventListener("keydown", onFirstGesture);\n      window.removeEventListener("touchstart", onFirstGesture);\n      window.removeEventListener("scroll", onFirstGesture);\n    };\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, []);\n\n  return (\n    <audio\n      ref={audioRef}\n      preload="auto"\n      style={{ display: "none" }}\n      aria-hidden="true"\n      // Intentionally not setting autoPlay: we start on first user gesture\n    />\n  );\n}\n
+import { useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
+
+type Track = { src: string; label?: string };
+
+type Props = {
+  tracks: Track[];
+  volume?: number; // 0..1
+};
+
+export function GlobalSoundtrack({ tracks, volume = 0.35 }: Props) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastIndexRef = useRef<number>(-1);
+  const [muted, setMuted] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  // Pick a random track, avoiding an immediate repeat when more than one exists.
+  function pickRandomTrack(): Track | null {
+    if (tracks.length === 0) return null;
+    if (tracks.length === 1) {
+      lastIndexRef.current = 0;
+      return tracks[0];
+    }
+    let idx = Math.floor(Math.random() * tracks.length);
+    if (idx === lastIndexRef.current) idx = (idx + 1) % tracks.length;
+    lastIndexRef.current = idx;
+    return tracks[idx];
+  }
+
+  function playRandom() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const track = pickRandomTrack();
+    if (!track) return;
+    audio.src = track.src;
+    void audio
+      .play()
+      .then(() => setStarted(true))
+      .catch(() => {
+        // Autoplay blocked - will retry on the first user gesture.
+      });
+  }
+
+  // Configure the element and try to autoplay on mount.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    audio.loop = false;
+
+    const onEnded = () => playRandom();
+    audio.addEventListener("ended", onEnded);
+
+    // Attempt immediate autoplay when visitors arrive.
+    playRandom();
+
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [volume]);
+
+  // Fallback: browsers commonly block autoplay-with-sound until the visitor
+  // interacts. Start on the first gesture if we haven't started yet.
+  useEffect(() => {
+    if (started) return;
+    const onFirstGesture = () => {
+      const audio = audioRef.current;
+      if (audio && audio.paused) {
+        if (!audio.src) {
+          playRandom();
+        } else {
+          void audio.play().then(() => setStarted(true)).catch(() => undefined);
+        }
+      } else if (audio) {
+        setStarted(true);
+      }
+      cleanup();
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", onFirstGesture);
+      window.removeEventListener("keydown", onFirstGesture);
+      window.removeEventListener("touchstart", onFirstGesture);
+    };
+    window.addEventListener("pointerdown", onFirstGesture);
+    window.addEventListener("keydown", onFirstGesture);
+    window.addEventListener("touchstart", onFirstGesture);
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started]);
+
+  function toggleMute() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const next = !muted;
+    audio.muted = next;
+    setMuted(next);
+    // If audio never started (autoplay blocked), a click counts as a gesture.
+    if (!next && audio.paused) {
+      if (!audio.src) playRandom();
+      else void audio.play().then(() => setStarted(true)).catch(() => undefined);
+    }
+  }
+
+  if (tracks.length === 0) return null;
+
+  return (
+    <>
+      <audio ref={audioRef} preload="auto" aria-hidden="true" style={{ display: "none" }} />
+      <button
+        type="button"
+        onClick={toggleMute}
+        aria-label={muted ? "Unmute soundtrack" : "Mute soundtrack"}
+        title={muted ? "Unmute soundtrack" : "Mute soundtrack"}
+        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-gold/50 bg-forest/90 text-gold shadow-lg backdrop-blur transition hover:bg-forest"
+      >
+        {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+      </button>
+    </>
+  );
+}

@@ -747,7 +747,7 @@ async function handleProductsList(env: WorkerEnv) {
   let rows: ProductApiRow[] = [];
   try {
     rows = await fetchProducts(
-      "/rest/v1/products?select=slug,name,category,type,price_cents,short,description,image_url,status,stock,uses,ingredients,badge,format&status=eq.active&stock=gt.0&order=name.asc",
+      "/rest/v1/products?select=slug,name,category,type,price_cents,short,description,image_url,status,stock,uses,ingredients,badge,format&status=eq.active&order=name.asc",
     );
   } catch (error) {
     console.warn(error);
