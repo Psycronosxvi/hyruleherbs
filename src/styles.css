@@ -1,0 +1,364 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-parchment: var(--parchment);
+  --color-parchment-dark: var(--parchment-dark);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-forest: var(--forest);
+  --color-ember: var(--ember);
+  --font-display: "Cinzel", "Cormorant Garamond", serif;
+  --font-body: "Lora", Georgia, serif;
+  --shadow-rune: 0 0 24px -4px color-mix(in oklab, var(--gold) 45%, transparent);
+  --shadow-scroll:
+    0 12px 32px -16px oklch(0.25 0.05 60 / 0.45), 0 2px 4px oklch(0.25 0.05 60 / 0.15);
+  --gradient-forest: linear-gradient(160deg, oklch(0.32 0.06 150) 0%, oklch(0.22 0.05 155) 100%);
+  --gradient-parchment: radial-gradient(
+    ellipse at top,
+    oklch(0.96 0.04 80) 0%,
+    oklch(0.91 0.05 78) 60%,
+    oklch(0.86 0.06 75) 100%
+  );
+  --gradient-gold: linear-gradient(135deg, oklch(0.82 0.14 85) 0%, oklch(0.7 0.16 75) 100%);
+}
+
+:root {
+  --text-on-dark: #e8dcc8;
+  --text-on-light: #1a1a1a;
+  --heading-on-dark: #d4af37;
+  --heading-on-light: #1a2e1a;
+  --muted-on-light: #4a3728;
+  --muted-on-dark: #c8bfa8;
+
+  --radius: 0.375rem;
+  --background: oklch(0.14 0.03 155);
+  --foreground: var(--text-on-dark);
+  --card: oklch(0.96 0.035 82);
+  /* Light cards/parchment: content text */
+  --card-foreground: var(--text-on-light);
+  --popover: oklch(0.96 0.035 82);
+  /* Light popovers/dialog content */
+  --popover-foreground: var(--text-on-light);
+  --primary: oklch(0.32 0.06 150);
+  --primary-foreground: oklch(0.96 0.04 82);
+  --secondary: oklch(0.22 0.04 150);
+  --secondary-foreground: oklch(0.92 0.04 82);
+  --muted: oklch(0.22 0.04 150);
+  --muted-foreground: var(--text-on-dark);
+  --accent: oklch(0.75 0.14 80);
+  --accent-foreground: oklch(0.22 0.04 60);
+  --destructive: oklch(0.48 0.18 28);
+  --destructive-foreground: oklch(0.96 0.04 82);
+  --border: oklch(0.32 0.06 150);
+  --input: oklch(0.86 0.04 78);
+  --ring: oklch(0.75 0.14 80);
+
+  --parchment: oklch(0.94 0.04 82);
+  --parchment-dark: oklch(0.86 0.06 75);
+  /* Gold accent */
+  --gold: var(--heading-on-dark);
+  --gold-foreground: oklch(0.18 0.03 150);
+  --forest: oklch(0.32 0.06 150);
+  --ember: oklch(0.68 0.18 38);
+}
+
+.dark {
+  --background: oklch(0.18 0.03 150);
+  /* Dark backgrounds: body/copy */
+  --foreground: var(--text-on-dark);
+  --card: oklch(0.22 0.04 150);
+  --card-foreground: var(--text-on-dark);
+  --popover: oklch(0.22 0.04 150);
+  --popover-foreground: var(--text-on-dark);
+  --primary: oklch(0.75 0.14 80);
+  --primary-foreground: oklch(0.18 0.03 150);
+  --secondary: oklch(0.28 0.04 150);
+  --secondary-foreground: oklch(0.92 0.04 82);
+  --muted: var(--muted-on-dark);
+  /* Improve contrast for muted text (dark mode) */
+  /* Dark backgrounds: body/copy */
+  --muted-foreground: var(--text-on-dark);
+  --accent: oklch(0.75 0.14 80);
+  --accent-foreground: oklch(0.18 0.03 150);
+  --border: oklch(0.32 0.04 150);
+  --input: oklch(0.32 0.04 150);
+  --ring: oklch(0.75 0.14 80);
+}
+
+/* Headings on dark backgrounds must always be gold (never dark text). */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--heading-on-dark) !important;
+}
+
+.bg-forest,
+[class*="bg-forest"] {
+  color: var(--text-on-dark);
+}
+
+.bg-forest h1,
+.bg-forest h2,
+.bg-forest h3,
+.bg-forest h4,
+.bg-forest h5,
+.bg-forest h6,
+[class*="bg-forest"] h1,
+[class*="bg-forest"] h2,
+[class*="bg-forest"] h3,
+[class*="bg-forest"] h4,
+[class*="bg-forest"] h5,
+[class*="bg-forest"] h6 {
+  color: var(--heading-on-dark) !important;
+}
+
+.bg-forest a,
+.bg-forest p,
+.bg-forest span,
+.bg-forest li,
+.bg-forest div,
+[class*="bg-forest"] a,
+[class*="bg-forest"] p,
+[class*="bg-forest"] span,
+[class*="bg-forest"] li {
+  color: inherit;
+}
+
+footer,
+footer a,
+footer p,
+footer span,
+footer li {
+  color: var(--text-on-dark);
+}
+
+footer h1,
+footer h2,
+footer h3,
+footer h4,
+footer h5,
+footer h6,
+footer [class*="text-gold"] {
+  color: var(--heading-on-dark) !important;
+}
+
+footer [class*="text-muted-foreground"] {
+  color: var(--muted-on-dark) !important;
+}
+
+footer [class*="text-forest"],
+footer [class*="text-parchment"] {
+  color: var(--text-on-dark) !important;
+}
+
+footer input,
+footer textarea,
+footer select {
+  color: var(--text-on-light) !important;
+}
+
+footer input::placeholder,
+footer textarea::placeholder {
+  color: var(--muted-on-light) !important;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-body);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--text-on-dark);
+
+    /* Base typography/readability */
+    font-size: 16px;
+    line-height: 1.65;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    background-image:
+      radial-gradient(circle at 15% 10%, oklch(0.22 0.05 150 / 0.9) 0%, transparent 55%),
+      radial-gradient(circle at 85% 80%, oklch(0.18 0.04 155 / 0.9) 0%, transparent 60%),
+      linear-gradient(180deg, oklch(0.10 0.02 155) 0%, oklch(0.14 0.03 155) 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.78  0 0 0 0 0.65  0 0 0 0 0.25  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+}
+
+/* Global readability:
+   Force readable contrast inside parchment/light containers (fixes footer + employee board + Careers).
+   - overrides any text colors (text-parchment/text-forest/text-muted-foreground/text-foreground/..)
+   - forces opacity back to 1 to avoid "too-light" variants. */
+
+.parchment-card,
+[class*="bg-parchment"],
+[class*="bg-card"],
+[class*="bg-popover"] {
+  color: var(--text-on-light);
+}
+
+[class*="bg-parchment"][class*="text-forest"],
+[class*="bg-card"][class*="text-forest"],
+[class*="bg-popover"][class*="text-forest"] {
+  color: var(--heading-on-light) !important;
+}
+
+.parchment-card h1,
+.parchment-card h2,
+.parchment-card h3,
+.parchment-card h4,
+.parchment-card h5,
+.parchment-card h6,
+[class*="bg-parchment"] h1,
+[class*="bg-parchment"] h2,
+[class*="bg-parchment"] h3,
+[class*="bg-parchment"] h4,
+[class*="bg-parchment"] h5,
+[class*="bg-parchment"] h6,
+[class*="bg-card"] h1,
+[class*="bg-card"] h2,
+[class*="bg-card"] h3,
+[class*="bg-card"] h4,
+[class*="bg-card"] h5,
+[class*="bg-card"] h6 {
+  color: var(--heading-on-light) !important;
+}
+
+.parchment-card [class*="text-muted-foreground"],
+[class*="bg-parchment"] [class*="text-muted-foreground"],
+[class*="bg-card"] [class*="text-muted-foreground"],
+[class*="bg-parchment-dark"] [class*="text-muted-foreground"] {
+  color: var(--muted-on-light) !important;
+  opacity: 1 !important;
+}
+
+.parchment-card [class*="text-parchment"],
+.parchment-card [class*="text-foreground/"],
+.parchment-card [class*="text-foreground"],
+[class*="bg-parchment"] [class*="text-parchment"],
+[class*="bg-parchment"] [class*="text-foreground/"],
+[class*="bg-parchment"] [class*="text-foreground"],
+[class*="bg-card"] [class*="text-parchment"],
+[class*="bg-card"] [class*="text-foreground/"],
+[class*="bg-card"] [class*="text-foreground"],
+[class*="bg-parchment-dark"] [class*="text-parchment"],
+[class*="bg-parchment-dark"] [class*="text-foreground/"],
+[class*="bg-parchment-dark"] [class*="text-foreground"] {
+  color: var(--text-on-light) !important;
+  opacity: 1 !important;
+}
+
+/* Extra: when forest/ember text appears inside parchment, force it to be readable (dark text). */
+[class*="bg-parchment"] [class*="text-forest"],
+[class*="bg-parchment"] [class*="text-ember"],
+[class*="bg-parchment-dark"] [class*="text-forest"],
+[class*="bg-parchment-dark"] [class*="text-ember"] {
+  color: var(--heading-on-light) !important;
+  opacity: 1 !important;
+}
+
+.office-console .parchment-card,
+.office-console [class*="bg-parchment"] {
+  color: var(--text-on-light);
+}
+
+.office-console .parchment-card h1,
+.office-console .parchment-card h2,
+.office-console .parchment-card h3,
+.office-console .parchment-card th,
+.office-console label {
+  color: var(--heading-on-light) !important;
+}
+
+.office-console .parchment-card td,
+.office-console .parchment-card input,
+.office-console .parchment-card textarea,
+.office-console .parchment-card select,
+.office-console .parchment-card code,
+.office-console .parchment-card pre {
+  color: var(--text-on-light) !important;
+}
+
+.office-console .parchment-card [class*="text-muted-foreground"],
+.office-console .parchment-card [class*="text-foreground/"] {
+  color: var(--muted-on-light) !important;
+}
+
+.dark-page [class*="text-forest"]:not(.parchment-card *):not([class*="bg-parchment"] *):not([class*="bg-card"] *) {
+  color: var(--heading-on-dark) !important;
+}
+
+.dark-page [class*="text-muted-foreground"]:not(.parchment-card *):not([class*="bg-parchment"] *):not([class*="bg-card"] *),
+.dark-page [class*="text-parchment/"]:not(.parchment-card *):not([class*="bg-parchment"] *):not([class*="bg-card"] *) {
+  color: var(--text-on-dark) !important;
+  opacity: 1 !important;
+}
+
+@utility parchment-card {
+  background: var(--gradient-parchment);
+  border: 1px solid color-mix(in oklab, var(--gold) 35%, var(--border));
+  box-shadow: var(--shadow-scroll);
+  position: relative;
+}
+
+@utility rune-glow {
+  box-shadow: var(--shadow-rune);
+}
+
+@utility ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--gold);
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+  }
+}
