@@ -911,7 +911,7 @@ var DEFAULT_PRODUCT_IMAGE_URL = "https://images.unsplash.com/photo-1526481280695
 var DEFAULT_PRESIDENT_EMAIL = "blackhatterxvi@gmail.com";
 var serverEntryPromise;
 async function getServerEntry() {
-	if (!serverEntryPromise) serverEntryPromise = import("./server-DVxFFpso.mjs").then((m) => m.default ?? m);
+	if (!serverEntryPromise) serverEntryPromise = import("./server-BHOvdBkW.mjs").then((m) => m.default ?? m);
 	return serverEntryPromise;
 }
 async function normalizeCatastrophicSsrResponse(response) {

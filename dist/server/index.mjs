@@ -15,285 +15,341 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/assets/about-vJNXOq9X.js": {
+	"/assets/about-DeOLZqNx.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"751-hQ68CYZTFFQMlGPOXTcla6j66LA\"",
-		"mtime": "2026-06-29T03:27:45.115Z",
+		"etag": "\"751-lzczFZR3Td5m6QPtQ2tmRSyNm1I\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 1873,
-		"path": "../client/assets/about-vJNXOq9X.js"
+		"path": "../client/assets/about-DeOLZqNx.js"
 	},
-	"/assets/account-BU6EIpus.js": {
+	"/assets/account-Bw4EwxFJ.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"1b9e-7k2r9W5nn5TQIvp3BuGkWKBeuLQ\"",
-		"mtime": "2026-06-29T03:27:45.115Z",
+		"etag": "\"1b9e-bRB4TD1orgyv6q8igWz1gkaZCq8\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 7070,
-		"path": "../client/assets/account-BU6EIpus.js"
+		"path": "../client/assets/account-Bw4EwxFJ.js"
 	},
-	"/assets/book-of-roots-BecEbFp_.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"ee88-ddWv4rwuHWuhL1fD5I4gzRngszs\"",
-		"mtime": "2026-06-29T03:27:45.115Z",
-		"size": 61064,
-		"path": "../client/assets/book-of-roots-BecEbFp_.js"
+	"/robots.txt": {
+		"type": "text/plain; charset=utf-8",
+		"etag": "\"29-dhpfRqlJKbts1JRy4qmglCSclTY\"",
+		"mtime": "2026-06-29T03:31:55.819Z",
+		"size": 41,
+		"path": "../client/robots.txt"
 	},
-	"/assets/book-open-D4Uq009i.js": {
+	"/assets/book-of-roots-BHVUKr6J.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"10c-cPS0MNkjqRwCjFx8sxFvhGROaro\"",
-		"mtime": "2026-06-29T03:27:45.115Z",
+		"etag": "\"12039-Ge0MlRM2+x6RAIwAeHk8mRw8ARM\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
+		"size": 73785,
+		"path": "../client/assets/book-of-roots-BHVUKr6J.js"
+	},
+	"/assets/book-open-DGqTtY1c.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"10c-SnYAUQcnLb5ycKK/jbWDmJ8pz+s\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 268,
-		"path": "../client/assets/book-open-D4Uq009i.js"
+		"path": "../client/assets/book-open-DGqTtY1c.js"
 	},
-	"/assets/careers-C3Xks4o8.js": {
+	"/assets/careers-Xt-1pFyS.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"1ad9-7CR4LGrvns/VUtf28tRXQCrp138\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"1ad9-zyjaV1XJDBZkLPDhMbK9Fb4dAyg\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 6873,
-		"path": "../client/assets/careers-C3Xks4o8.js"
+		"path": "../client/assets/careers-Xt-1pFyS.js"
 	},
-	"/assets/cart-41ibV92R.js": {
+	"/assets/cart-CqiiW_d_.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"13c7-75KvqmQcoMnI0Wh62kuAQ2+txNc\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"13c7-TVof6ldOW09D2raovAn3WLGF+9M\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 5063,
-		"path": "../client/assets/cart-41ibV92R.js"
+		"path": "../client/assets/cart-CqiiW_d_.js"
 	},
 	"/assets/cat-flowers-BsrzwQRG.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"1d4c7-K2N4wun3yMRDF3FjWh2KbPYyXb0\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 120007,
 		"path": "../client/assets/cat-flowers-BsrzwQRG.jpg"
 	},
 	"/assets/cat-herbs-BfWvkTIP.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"1323a-H0AqUXTWzMOUUm5wKjaIhldfjRI\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 78394,
 		"path": "../client/assets/cat-herbs-BfWvkTIP.jpg"
 	},
 	"/assets/cat-kits-DzYLH2Zf.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"15c62-erk6RjulMc5nJ2jJOROTRFmVT4A\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 89186,
 		"path": "../client/assets/cat-kits-DzYLH2Zf.jpg"
 	},
 	"/assets/cat-oils-DtJMbh37.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"15ef6-FpCqHt4pzb3wZa2dKzjd0M0v6yo\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 89846,
 		"path": "../client/assets/cat-oils-DtJMbh37.jpg"
 	},
 	"/assets/cat-teas-CisC-6TL.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"15fda-fmHvavGsQ7w6oe27pQjjZK2Q2+E\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 90074,
 		"path": "../client/assets/cat-teas-CisC-6TL.jpg"
-	},
-	"/assets/file-text-CMBqSiW6.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"263-oyuarm5gz3yn4CDJSBJwHbW8Wgw\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
-		"size": 611,
-		"path": "../client/assets/file-text-CMBqSiW6.js"
 	},
 	"/assets/cat-tinctures-nu5luYGH.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"16d36-Pmy5mNqNoR9rThixtm5HHwJuyg0\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 93494,
 		"path": "../client/assets/cat-tinctures-nu5luYGH.jpg"
+	},
+	"/assets/file-text-BhbbScj_.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"263-SAa6x0mOkceS25EH/dVYXINw0AI\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
+		"size": 611,
+		"path": "../client/assets/file-text-BhbbScj_.js"
 	},
 	"/assets/hero-apothecary-BOUIDkAR.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"3ac09-6vrDeEVs7dqdxnOGHMKing3pO64\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 240649,
 		"path": "../client/assets/hero-apothecary-BOUIDkAR.jpg"
 	},
-	"/assets/join-DzLNde1r.js": {
+	"/assets/index-B_vaZkLc.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"4dc-0zVvv/XyuiJmueZ/xXEuZz3OEjg\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"65a95-a0GFoHg3TjRhjSfCWt5sYj/iUNU\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
+		"size": 416405,
+		"path": "../client/assets/index-B_vaZkLc.js"
+	},
+	"/assets/join-B1OKcOtY.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"4dc-vnM2UfKJC4LBCTdhd36zKDGTMmU\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 1244,
-		"path": "../client/assets/join-DzLNde1r.js"
+		"path": "../client/assets/join-B1OKcOtY.js"
+	},
+	"/assets/ayurvedic-indian-medicine-Cr2gTj7H.png": {
+		"type": "image/png",
+		"etag": "\"138616-iaxRk5EEPiQdr4UrMT4RPAYX9RA\"",
+		"mtime": "2026-06-29T03:31:54.875Z",
+		"size": 1279510,
+		"path": "../client/assets/ayurvedic-indian-medicine-Cr2gTj7H.png"
+	},
+	"/assets/cajun-folk-remedies-Bjc2xH1R.png": {
+		"type": "image/png",
+		"etag": "\"168cee-G4hP6q2uS2Sb+p6SUILkTSu1cbk\"",
+		"mtime": "2026-06-29T03:31:54.875Z",
+		"size": 1477870,
+		"path": "../client/assets/cajun-folk-remedies-Bjc2xH1R.png"
 	},
 	"/assets/jsx-runtime-DUAcabCT.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"42a-6CWT3JsIzkgrrMo5qQ6L1UWEbvM\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 1066,
 		"path": "../client/assets/jsx-runtime-DUAcabCT.js"
 	},
-	"/assets/leaf-gVr1V7nj.js": {
+	"/assets/leaf-BovEYWZ0.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"fe-nnPRxDZ8I0dlKmeSWQnTlbyC5Mc\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"fe-whGBgH7ZwvGzhW8TxkAcTDxPdPE\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 254,
-		"path": "../client/assets/leaf-gVr1V7nj.js"
+		"path": "../client/assets/leaf-BovEYWZ0.js"
 	},
 	"/assets/link-8bud9NQ9.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"6890-gqgnTJkPogIdR3URQ/rqcsy43IA\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 26768,
 		"path": "../client/assets/link-8bud9NQ9.js"
 	},
-	"/assets/lock-CCqrqFeb.js": {
+	"/assets/caribbean-rastafarian-herbalism-PUMDo5tX.png": {
+		"type": "image/png",
+		"etag": "\"159bd4-P5TVErLuwLm9bUBQ/hEIsD7i1xI\"",
+		"mtime": "2026-06-29T03:31:54.875Z",
+		"size": 1416148,
+		"path": "../client/assets/caribbean-rastafarian-herbalism-PUMDo5tX.png"
+	},
+	"/assets/lock-nnbcTee8.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"176-SRTgc+c+QKad20/fEj7aNAnQgVY\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"176-x2o5SDyDFP90taBc0n+6gEdIxOk\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 374,
-		"path": "../client/assets/lock-CCqrqFeb.js"
+		"path": "../client/assets/lock-nnbcTee8.js"
 	},
 	"/assets/logo-crest-DsdeJ21C.jpg": {
 		"type": "image/jpeg",
 		"etag": "\"30337-/kOOzQ3ZkHgLDATR76kaQX6KJaU\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.879Z",
 		"size": 197431,
 		"path": "../client/assets/logo-crest-DsdeJ21C.jpg"
 	},
-	"/assets/minus-VtsGNqM9.js": {
+	"/assets/minus-CUbLYbAv.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"6a-WIQlAlP+VCJ0PIMyNu1EUM45x+E\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"6a-UhB77Hjcap62QXm2Brg4ytXEtXI\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 106,
-		"path": "../client/assets/minus-VtsGNqM9.js"
+		"path": "../client/assets/minus-CUbLYbAv.js"
 	},
-	"/robots.txt": {
-		"type": "text/plain; charset=utf-8",
-		"etag": "\"29-dhpfRqlJKbts1JRy4qmglCSclTY\"",
-		"mtime": "2026-06-29T03:27:46.167Z",
-		"size": 41,
-		"path": "../client/robots.txt"
+	"/assets/chinese-traditional-medicine-Cp2lnYll.png": {
+		"type": "image/png",
+		"etag": "\"17cf0d-t/FdG+PnIyQwsYWkOsPKZe0y9ro\"",
+		"mtime": "2026-06-29T03:31:54.879Z",
+		"size": 1560333,
+		"path": "../client/assets/chinese-traditional-medicine-Cp2lnYll.png"
 	},
-	"/assets/index-ByakYuag.js": {
+	"/assets/nightbloom-BCob8UA3.jpg": {
+		"type": "image/jpeg",
+		"etag": "\"3cbc9-xrx3xnRqPv+8yc6PUZgLxJfRsog\"",
+		"mtime": "2026-06-29T03:31:54.883Z",
+		"size": 248777,
+		"path": "../client/assets/nightbloom-BCob8UA3.jpg"
+	},
+	"/assets/nightbloom-BVuzgHON.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"65a95-+ZhibrOFJ48iYvi2cX/brvJpLVM\"",
-		"mtime": "2026-06-29T03:27:45.115Z",
-		"size": 416405,
-		"path": "../client/assets/index-ByakYuag.js"
-	},
-	"/assets/nightbloom-DwWRTBKK.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"dfa-rpy++wdsC461D2dkSG1Ilbh8JC0\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"dfa-ylSV82A44+KBMIQKCAtbJoP+saA\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 3578,
-		"path": "../client/assets/nightbloom-DwWRTBKK.js"
+		"path": "../client/assets/nightbloom-BVuzgHON.js"
 	},
-	"/assets/oracle-yAZLJ2yP.js": {
+	"/assets/oracle-MG5rr9i_.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"1ae9-8xch6KAOI34EPJGZTPdQke/oykk\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"1ae9-b5UzEBcH5aBrL9Yf2EYnstxCO3g\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 6889,
-		"path": "../client/assets/oracle-yAZLJ2yP.js"
+		"path": "../client/assets/oracle-MG5rr9i_.js"
 	},
-	"/assets/plus-C4reUJBo.js": {
+	"/assets/plus-09qfNFd7.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"8e-OibknfbRCw8XWI/M3Ee81OgLQWY\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"8e-+ltzQjZGZW969U583+812fpdkRU\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 142,
-		"path": "../client/assets/plus-C4reUJBo.js"
+		"path": "../client/assets/plus-09qfNFd7.js"
 	},
-	"/assets/product-card-BQdTYfpz.js": {
+	"/assets/product-card-BRbjhkqn.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"874-G8pdi9taF7QDXUijIsVOVDo2zug\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"874-m8mPrIWPBgN/D40cug81zJljFug\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 2164,
-		"path": "../client/assets/product-card-BQdTYfpz.js"
+		"path": "../client/assets/product-card-BRbjhkqn.js"
 	},
 	"/assets/product._slug--BOuSWIB.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"1aa-CSMqxo867WhiORsEZdzo6PFzw+0\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 426,
 		"path": "../client/assets/product._slug--BOuSWIB.js"
 	},
-	"/assets/product._slug-Cf1_84RV.js": {
+	"/assets/product._slug-DlsoVTPg.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"17a1-6Ce52BxFm1GIrqf0yS0jAR4vdhg\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"17a1-y8bC9xUXbbajBzit6RXrx+Q3cpA\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 6049,
-		"path": "../client/assets/product._slug-Cf1_84RV.js"
+		"path": "../client/assets/product._slug-DlsoVTPg.js"
 	},
 	"/assets/product._slug-XUfW_Y0G.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"105-FffuCZiPBudh67jLwwHGtOySovg\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 261,
 		"path": "../client/assets/product._slug-XUfW_Y0G.js"
 	},
 	"/assets/react-DbyrFoBd.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"1d67-mi2wZUq39ijUTZDJBuXqznfenBA\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 7527,
 		"path": "../client/assets/react-DbyrFoBd.js"
 	},
-	"/assets/routes-BSNS_3ob.js": {
+	"/assets/appalachian-folk-medicine-Dim5wdMf.png": {
+		"type": "image/png",
+		"etag": "\"18739a-o4SyVRazmUopn3kQjBBj+ywmVmU\"",
+		"mtime": "2026-06-29T03:31:54.871Z",
+		"size": 1602458,
+		"path": "../client/assets/appalachian-folk-medicine-Dim5wdMf.png"
+	},
+	"/assets/african-herbalism-CG_4W2JV.png": {
+		"type": "image/png",
+		"etag": "\"16c38f-Z6HYjR+VFhsrUqvLTg/fTME0140\"",
+		"mtime": "2026-06-29T03:31:54.871Z",
+		"size": 1491855,
+		"path": "../client/assets/african-herbalism-CG_4W2JV.png"
+	},
+	"/assets/office-h-Zw4aGj.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"15a0-EaIB0LN4a8E7irRvcXVICXVyT0M\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"6600d-wMtSa/L0qrbz0ldr7iMyI/B2tXI\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
+		"size": 417805,
+		"path": "../client/assets/office-h-Zw4aGj.js"
+	},
+	"/assets/routes-DNTyH7HA.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"15a0-X74xk9zU+QQAoCMHvVHph8YJrYQ\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 5536,
-		"path": "../client/assets/routes-BSNS_3ob.js"
+		"path": "../client/assets/routes-DNTyH7HA.js"
 	},
-	"/assets/shop-NGgmGjkr.js": {
+	"/assets/native-american-plant-medicine-B1EM8hF8.png": {
+		"type": "image/png",
+		"etag": "\"16cc88-6yXeUlRBzt6WkBgeZ6Vw4QOkiME\"",
+		"mtime": "2026-06-29T03:31:54.879Z",
+		"size": 1494152,
+		"path": "../client/assets/native-american-plant-medicine-B1EM8hF8.png"
+	},
+	"/assets/shop-MZ8gifaW.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"cd6-r02/QBwLjPSdYVgYrah6gx5p3Iw\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"cd6-qtEm6x5XSkEVC/IYhS73ag3yWig\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 3286,
-		"path": "../client/assets/shop-NGgmGjkr.js"
+		"path": "../client/assets/shop-MZ8gifaW.js"
 	},
-	"/assets/shopping-bag-BgwDlq8t.js": {
+	"/assets/shopping-bag-DMtXobs2.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"149-9CTQFandhyw8ENwVOgb9syrMgj8\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"149-TJgG+cxR6h3DRt4YgcHGBZKb/9g\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 329,
-		"path": "../client/assets/shopping-bag-BgwDlq8t.js"
+		"path": "../client/assets/shopping-bag-DMtXobs2.js"
 	},
-	"/assets/signin-DtTdtXJq.js": {
+	"/assets/signin-lwsS04yt.js": {
 		"type": "text/javascript; charset=utf-8",
-		"etag": "\"bbc-rPwKBM05E+cCy6EDLPrNObI6SEs\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
+		"etag": "\"bbc-RqcMlRNMtsUh0HrCsrP5QJDqLQA\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
 		"size": 3004,
-		"path": "../client/assets/signin-DtTdtXJq.js"
+		"path": "../client/assets/signin-lwsS04yt.js"
 	},
 	"/assets/styles-VthvloAO.css": {
 		"type": "text/css; charset=utf-8",
 		"etag": "\"19355-+4NQSj+dCsdGyBKkwVyfmXhbHSo\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
+		"mtime": "2026-06-29T03:31:54.883Z",
 		"size": 103253,
 		"path": "../client/assets/styles-VthvloAO.css"
-	},
-	"/assets/nightbloom-BCob8UA3.jpg": {
-		"type": "image/jpeg",
-		"etag": "\"3cbc9-xrx3xnRqPv+8yc6PUZgLxJfRsog\"",
-		"mtime": "2026-06-29T03:27:45.127Z",
-		"size": 248777,
-		"path": "../client/assets/nightbloom-BCob8UA3.jpg"
-	},
-	"/assets/office-DV07wyYB.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"6600d-d8gqZ0BesRTwVPsNBNdnMdprC8w\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
-		"size": 417805,
-		"path": "../client/assets/office-DV07wyYB.js"
-	},
-	"/assets/Herb Moon Caravan (1)-DEpzGz1I.mp3": {
-		"type": "audio/mpeg",
-		"etag": "\"5259fd-QQzDiogJTTPF8k11kVnBunCulb4\"",
-		"mtime": "2026-06-29T03:27:45.119Z",
-		"size": 5396989,
-		"path": "../client/assets/Herb Moon Caravan (1)-DEpzGz1I.mp3"
 	},
 	"/assets/Herb Moon Caravan-DQCwYu2J.mp3": {
 		"type": "audio/mpeg",
 		"etag": "\"4c5e06-ysE4OA1cxt09EGYpjRCDUo+vfRU\"",
-		"mtime": "2026-06-29T03:27:45.123Z",
+		"mtime": "2026-06-29T03:31:54.867Z",
 		"size": 5004806,
 		"path": "../client/assets/Herb Moon Caravan-DQCwYu2J.mp3"
+	},
+	"/assets/wiccan-earth-based-healing--cm5gP66.png": {
+		"type": "image/png",
+		"etag": "\"19d4e6-fveId+Kct//JViw9IUZoYPL9JBY\"",
+		"mtime": "2026-06-29T03:31:54.883Z",
+		"size": 1692902,
+		"path": "../client/assets/wiccan-earth-based-healing--cm5gP66.png"
+	},
+	"/assets/Herb Moon Caravan (1)-DEpzGz1I.mp3": {
+		"type": "audio/mpeg",
+		"etag": "\"5259fd-QQzDiogJTTPF8k11kVnBunCulb4\"",
+		"mtime": "2026-06-29T03:31:54.863Z",
+		"size": 5396989,
+		"path": "../client/assets/Herb Moon Caravan (1)-DEpzGz1I.mp3"
 	}
 };
 //#endregion

@@ -1,8 +1,11 @@
-import herbsImg from "@/assets/cat-herbs.jpg";
-import flowersImg from "@/assets/cat-flowers.jpg";
-import teasImg from "@/assets/cat-teas.jpg";
-import oilsImg from "@/assets/cat-oils.jpg";
-import kitsImg from "@/assets/cat-kits.jpg";
+import chineseImg from "@/assets/books/chinese-traditional-medicine.png";
+import cajunImg from "@/assets/books/cajun-folk-remedies.png";
+import africanImg from "@/assets/books/african-herbalism.png";
+import wiccanImg from "@/assets/books/wiccan-earth-based-healing.png";
+import ayurvedicImg from "@/assets/books/ayurvedic-indian-medicine.png";
+import nativeAmericanImg from "@/assets/books/native-american-plant-medicine.png";
+import caribbeanImg from "@/assets/books/caribbean-rastafarian-herbalism.png";
+import appalachianImg from "@/assets/books/appalachian-folk-medicine.png";
 
 export type CulturalBook = {
   slug: string;
@@ -38,7 +41,7 @@ export const culturalBooks: CulturalBook[] = [
       "Modern research commonly studies individual botanicals, quality control, and safety interactions.",
     ],
     pdfProductSlug: "chinese-traditional-medicine-pdf",
-    coverImage: teasImg,
+    coverImage: chineseImg,
     firstPagePreview:
       "Page 1 introduces qi, yin-yang, five phases, and why formulas require trained pattern assessment.",
     subscriberRecipe: {
@@ -62,7 +65,7 @@ export const culturalBooks: CulturalBook[] = [
       "Ingredient evidence varies, so labels should separate household tradition from medical claims.",
     ],
     pdfProductSlug: "cajun-folk-remedies-pdf",
-    coverImage: herbsImg,
+    coverImage: cajunImg,
     firstPagePreview:
       "Page 1 maps the bayou kitchen cabinet: teas, steam, rubs, soup, and careful plant identification.",
     subscriberRecipe: {
@@ -86,7 +89,7 @@ export const culturalBooks: CulturalBook[] = [
       "Nutrient profiles and phytochemical studies support careful educational discussion for several foods and herbs.",
     ],
     pdfProductSlug: "african-herbalism-pdf",
-    coverImage: herbsImg,
+    coverImage: africanImg,
     firstPagePreview:
       "Page 1 begins with respect: Africa is not one tradition, and every plant belongs to a place.",
     subscriberRecipe: {
@@ -110,7 +113,7 @@ export const culturalBooks: CulturalBook[] = [
       "Safety evidence matters most around ingestion, smoke, essential oils, pregnancy, and medication interactions.",
     ],
     pdfProductSlug: "wiccan-earth-based-healing-pdf",
-    coverImage: flowersImg,
+    coverImage: wiccanImg,
     firstPagePreview:
       "Page 1 covers correspondence, consent, smoke-free ritual options, and when not to ingest herbs.",
     subscriberRecipe: {
@@ -134,7 +137,7 @@ export const culturalBooks: CulturalBook[] = [
       "Modern studies examine select botanicals, but results depend on dose, quality, and person-specific context.",
     ],
     pdfProductSlug: "ayurvedic-indian-medicine-pdf",
-    coverImage: oilsImg,
+    coverImage: ayurvedicImg,
     firstPagePreview:
       "Page 1 introduces dosha, agni, rasayana, and why practitioner guidance matters.",
     subscriberRecipe: {
@@ -158,7 +161,7 @@ export const culturalBooks: CulturalBook[] = [
       "Commercial use must avoid extraction from closed ceremonies and endangered or overharvested plants.",
     ],
     pdfProductSlug: "native-american-plant-medicine-pdf",
-    coverImage: kitsImg,
+    coverImage: nativeAmericanImg,
     firstPagePreview:
       "Page 1 explains sovereignty, closed knowledge, ethical sourcing, and why not every sacred plant is for sale.",
     subscriberRecipe: {
@@ -182,7 +185,7 @@ export const culturalBooks: CulturalBook[] = [
       "Some plants have active compounds that require stronger safety notes than casual wellness marketing suggests.",
     ],
     pdfProductSlug: "caribbean-rastafarian-herbalism-pdf",
-    coverImage: teasImg,
+    coverImage: caribbeanImg,
     firstPagePreview:
       "Page 1 opens with ital, bush tea, bitters, and the difference between cultural use and disease claims.",
     subscriberRecipe: {
@@ -206,7 +209,7 @@ export const culturalBooks: CulturalBook[] = [
       "Several plants need identification safeguards, dosing caution, and conservation awareness.",
     ],
     pdfProductSlug: "appalachian-folk-medicine-pdf",
-    coverImage: herbsImg,
+    coverImage: appalachianImg,
     firstPagePreview:
       "Page 1 covers mountain materia medica, garden medicine, and careful harvest ethics.",
     subscriberRecipe: {
