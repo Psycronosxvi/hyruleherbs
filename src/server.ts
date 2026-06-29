@@ -98,7 +98,8 @@ type OfficeTab =
   | "nightbloom"
   | "command"
   | "book_of_roots"
-  | "analytics";
+  | "analytics"
+  | "guild";
 
 const DEFAULT_PRESIDENT_EMAIL = "blackhatterxvi@gmail.com";
 
@@ -781,13 +782,175 @@ async function handleProductsList(env: WorkerEnv) {
   return json({ products, backend: "supabase" });
 }
 
-async function handleNightbloomList(env: WorkerEnv, includeDrafts = false) {
-  const filter = includeDrafts ? "" : "&status=eq.active";
-  const rows = await supabaseJson(
+type NightbloomRow = {
+  id: number;
+  title: string;
+  blurb: string;
+  pdf_url: string;
+  cover_image_url?: string | null;
+  price_cents: number;
+  status: string;
+  sort_order?: number;
+  created_at?: string;
+};
+
+async function handleNightbloomList(request: Request, env: WorkerEnv) {
+  const rows = await supabaseJson<NightbloomRow[]>(
     env,
-    `/rest/v1/nightbloom_pdfs?select=*&order=sort_order.asc,created_at.desc${filter}`,
+    `/rest/v1/nightbloom_pdfs?select=*&order=sort_order.asc,created_at.desc&status=eq.active`,
   ).catch(() => []);
-  return json({ pdfs: rows });
+
+  const user = await getCurrentUser(request, env);
+  const purchasedIds = user.email ? await getPurchasedPdfIds(env, user.email) : new Set<number>();
+
+  // Never expose the raw PDF URL in the public list. Access is decided server-side and the
+  // file is only handed out through the gated download endpoint.
+  const pdfs = rows.map((row) => {
+    const isFree = (row.price_cents ?? 0) === 0;
+    const unlocked = isFree ? Boolean(user.email) : purchasedIds.has(row.id);
+    return {
+      id: row.id,
+      title: row.title,
+      blurb: row.blurb,
+      cover_image_url: row.cover_image_url ?? null,
+      price_cents: row.price_cents ?? 0,
+      status: row.status,
+      unlocked,
+    };
+  });
+
+  return json({ pdfs, authenticated: Boolean(user.email) });
+}
+
+async function getPurchasedPdfIds(env: WorkerEnv, email: string) {
+  const rows = await supabaseJson<Array<{ pdf_id: number }>>(
+    env,
+    `/rest/v1/pdf_purchases?select=pdf_id&buyer_email=eq.${eq(email.trim().toLowerCase())}`,
+  ).catch(() => []);
+  return new Set(rows.map((row) => row.pdf_id));
+}
+
+async function handleNightbloomDownload(request: Request, env: WorkerEnv) {
+  const id = Number(new URL(request.url).searchParams.get("id"));
+  if (!Number.isInteger(id) || id < 1) return json({ message: "Invalid PDF id." }, { status: 400 });
+  const user = await getCurrentUser(request, env);
+  if (!user.email) return json({ message: "Please sign in to access this PDF." }, { status: 401 });
+
+  const rows = await supabaseJson<NightbloomRow[]>(
+    env,
+    `/rest/v1/nightbloom_pdfs?select=id,pdf_url,price_cents,status&id=eq.${id}&limit=1`,
+  ).catch(() => []);
+  const pdf = rows[0];
+  if (!pdf || pdf.status !== "active") return json({ message: "PDF not found." }, { status: 404 });
+
+  const isFree = (pdf.price_cents ?? 0) === 0;
+  if (!isFree) {
+    const purchased = await getPurchasedPdfIds(env, user.email);
+    if (!purchased.has(pdf.id) && !user.isPresident) {
+      return json({ message: "Purchase this PDF to download it." }, { status: 403 });
+    }
+  }
+  return json({ url: pdf.pdf_url });
+}
+
+async function handleNightbloomCheckout(request: Request, env: WorkerEnv) {
+  if (request.method !== "POST") {
+    return json({ message: "Method not allowed" }, { status: 405, headers: { allow: "POST" } });
+  }
+  const stripeSecretKey = cleanSecret(env.STRIPE_SECRET_KEY);
+  if (!stripeSecretKey || (!stripeSecretKey.startsWith("sk_") && !stripeSecretKey.startsWith("rk_"))) {
+    return json({ message: "Stripe is not configured yet." }, { status: 503 });
+  }
+
+  const body = (await request.json().catch(() => null)) as { id?: number } | null;
+  const id = Number(body?.id);
+  if (!Number.isInteger(id) || id < 1) return json({ message: "Invalid PDF id." }, { status: 400 });
+
+  const rows = await supabaseJson<NightbloomRow[]>(
+    env,
+    `/rest/v1/nightbloom_pdfs?select=*&id=eq.${id}&limit=1`,
+  ).catch(() => []);
+  const pdf = rows[0];
+  if (!pdf || pdf.status !== "active") return json({ message: "PDF not found." }, { status: 404 });
+  if ((pdf.price_cents ?? 0) < 1) return json({ message: "This PDF is free for members." }, { status: 400 });
+
+  const user = await getCurrentUser(request, env);
+  if (!user.email) return json({ message: "Please sign in before purchasing." }, { status: 401 });
+
+  const alreadyOwned = await getPurchasedPdfIds(env, user.email);
+  if (alreadyOwned.has(id)) return json({ message: "You already own this PDF." }, { status: 400 });
+
+  const origin = new URL(request.url).origin;
+  const params = new URLSearchParams({
+    mode: "payment",
+    success_url: `${origin}/nightbloom?purchase=success`,
+    cancel_url: `${origin}/nightbloom?purchase=cancelled`,
+    customer_email: user.email,
+    "metadata[kind]": "nightbloom_pdf",
+    "metadata[pdf_id]": String(id),
+    "metadata[user_email]": user.email,
+    "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][unit_amount]": String(pdf.price_cents),
+    "line_items[0][price_data][product_data][name]": pdf.title.slice(0, 255),
+    "line_items[0][price_data][product_data][description]": (pdf.blurb || "Night Bloom Library PDF").slice(0, 255),
+    "line_items[0][price_data][product_data][metadata][pdf_id]": String(id),
+  });
+
+  const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${stripeSecretKey}`,
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: params,
+  }).catch(() => null);
+
+  const stripeData = (await stripeResponse?.json().catch(() => null)) as { url?: string; error?: { message?: string } } | null;
+  if (!stripeResponse?.ok || !stripeData?.url) {
+    return json({ message: stripeData?.error?.message || "Stripe could not create checkout." }, { status: 502 });
+  }
+  return json({ url: stripeData.url });
+}
+
+async function handleGuildApply(request: Request, env: WorkerEnv) {
+  if (request.method !== "POST") {
+    return json({ message: "Method not allowed" }, { status: 405, headers: { allow: "POST" } });
+  }
+  const body = (await request.json().catch(() => null)) as {
+    full_name?: string;
+    email?: string;
+    job_id?: string;
+    job_title?: string;
+    portfolio_url?: string;
+    message?: string;
+  } | null;
+
+  const fullName = body?.full_name?.trim();
+  const email = body?.email?.trim().toLowerCase();
+  if (!fullName) return json({ message: "Your name is required." }, { status: 400 });
+  if (!email || !isEmail(email)) return json({ message: "A valid email is required." }, { status: 400 });
+  if (!body?.message?.trim()) return json({ message: "Please tell us why this role calls to you." }, { status: 400 });
+
+  try {
+    await supabaseJson(env, "/rest/v1/guild_applications", {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: fullName,
+        email,
+        job_id: nullableString(body.job_id),
+        job_title: nullableString(body.job_title),
+        portfolio_url: nullableString(body.portfolio_url),
+        message: body.message.trim(),
+        status: "new",
+      }),
+    });
+  } catch (error) {
+    console.error(JSON.stringify({ message: "Guild application save failed", detail: error instanceof Error ? error.message : String(error) }));
+    return json({ message: "We could not record your application. Please try again." }, { status: 502 });
+  }
+  await audit(env, email, "guild.apply", { job_title: body.job_title ?? null });
+  return json({ message: "Application received." });
 }
 
 async function handleStripeCheckout(request: Request, env: WorkerEnv) {
@@ -1078,6 +1241,25 @@ async function handleStripeWebhook(request: Request, env: WorkerEnv) {
     typeof session.customer_details === "object" && session.customer_details
       ? String((session.customer_details as Record<string, unknown>).email ?? metadata.user_email ?? "")
       : metadata.user_email || null;
+  // Night Bloom PDF purchases are digital: record the unlock and skip the physical order pipeline.
+  if (metadata.kind === "nightbloom_pdf") {
+    const pdfId = Number(metadata.pdf_id);
+    if (Number.isInteger(pdfId) && email) {
+      await supabaseJson(env, "/rest/v1/pdf_purchases?on_conflict=pdf_id,buyer_email", {
+        method: "POST",
+        prefer: "resolution=merge-duplicates",
+        body: JSON.stringify({
+          pdf_id: pdfId,
+          buyer_email: email.trim().toLowerCase(),
+          stripe_checkout_session_id: sessionId,
+          amount_cents: Number(session.amount_total ?? 0),
+        }),
+      }).catch(() => undefined);
+      await maybeAwardReferral(env, email);
+    }
+    return json({ received: true, pdfId });
+  }
+
   const shippingDetails =
     typeof session.shipping_details === "object" && session.shipping_details
       ? (session.shipping_details as Record<string, unknown>)
@@ -1167,6 +1349,7 @@ const roleTabs: Record<string, OfficeTab[]> = {
     "command",
     "book_of_roots",
     "analytics",
+    "guild",
   ],
   admin: [
     "dashboard",
@@ -1182,10 +1365,8 @@ const roleTabs: Record<string, OfficeTab[]> = {
     "command",
     "book_of_roots",
     "analytics",
+    "guild",
   ],
-  it_coordinator: ["products", "orders"],
-  marketing: ["marketing"],
-  user: [],
 };
 
 async function allowedTabsForUser(env: WorkerEnv, email: string | undefined, role: string) {
@@ -1285,6 +1466,7 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     bannedIps,
     auditDocuments,
     pageViews,
+    guildApplications,
   ] = await Promise.all([
     supabaseJson(
       env,
@@ -1304,6 +1486,7 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     supabaseJson(env, "/rest/v1/banned_ips?select=*&order=created_at.desc").catch(() => []),
     supabaseJson(env, "/rest/v1/audit_documents?select=*&order=created_at.desc").catch(() => []),
     supabaseJson(env, "/rest/v1/page_views?select=path,source,referrer,user_email,created_at&order=created_at.desc&limit=1000").catch(() => []),
+    supabaseJson(env, "/rest/v1/guild_applications?select=*&order=created_at.desc&limit=200").catch(() => []),
   ]);
 
   return json({
@@ -1323,6 +1506,7 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     bannedIps,
     auditDocuments,
     analytics: buildAnalytics(Array.isArray(pageViews) ? pageViews : []),
+    guildApplications,
   });
 }
 
@@ -1721,6 +1905,27 @@ async function handleOfficeNightbloomDelete(request: Request, env: WorkerEnv, id
   await supabaseJson(env, `/rest/v1/nightbloom_pdfs?id=eq.${id}`, { method: "DELETE" });
   await audit(env, access.user.email, "nightbloom.delete", { id });
   return json({ message: "Night Bloom PDF deleted." });
+}
+
+async function handleOfficeGuild(request: Request, env: WorkerEnv) {
+  const access = await requireOfficeAccess(request, env, "guild");
+  if (!access.ok) return access.response;
+  if (request.method === "DELETE") {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id || !/^\d+$/.test(id)) return json({ message: "Invalid application id." }, { status: 400 });
+    await supabaseJson(env, `/rest/v1/guild_applications?id=eq.${id}`, { method: "DELETE" });
+    await audit(env, access.user.email, "guild.delete", { id });
+    return json({ message: "Application removed." });
+  }
+  const body = (await request.json().catch(() => null)) as { id?: number; status?: string } | null;
+  if (!body?.id) return json({ message: "Application id is required." }, { status: 400 });
+  const status = ["new", "reviewing", "contacted", "archived"].includes(body.status ?? "") ? body.status : "new";
+  await supabaseJson(env, `/rest/v1/guild_applications?id=eq.${body.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+  });
+  await audit(env, access.user.email, "guild.update", { id: body.id, status });
+  return json({ message: "Application updated." });
 }
 
 function parseCommand(input: string) {
@@ -2210,7 +2415,11 @@ async function handleApi(request: Request, env: WorkerEnv) {
   }
   if (url.pathname === "/api/session") return handleSession(request, env);
   if (url.pathname === "/api/products") return handleProductsList(env);
-  if (url.pathname === "/api/nightbloom") return handleNightbloomList(env);
+  if (url.pathname === "/api/careers/apply") return handleGuildApply(request, env);
+  if (url.pathname === "/api/office/guild") return handleOfficeGuild(request, env);
+  if (url.pathname === "/api/nightbloom") return handleNightbloomList(request, env);
+  if (url.pathname === "/api/nightbloom/checkout") return handleNightbloomCheckout(request, env);
+  if (url.pathname === "/api/nightbloom/download") return handleNightbloomDownload(request, env);
   if (url.pathname === "/api/account") return handleAccountData(request, env);
   if (url.pathname === "/api/announcement") return handleAnnouncement(request, env);
   if (url.pathname === "/api/analytics/track") return handleAnalyticsTrack(request, env);

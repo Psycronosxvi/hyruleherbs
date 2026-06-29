@@ -14,6 +14,7 @@ import {
   Ban,
   Bell,
   BookOpen,
+  Briefcase,
   ChartColumn,
   Command,
   FileText,
@@ -155,6 +156,19 @@ type OfficeData = {
   bannedIps: BannedIp[];
   auditDocuments: AuditDocument[];
   analytics: AnalyticsData;
+  guildApplications: GuildApplication[];
+};
+
+type GuildApplication = {
+  id: number;
+  full_name: string;
+  email: string;
+  job_id?: string | null;
+  job_title?: string | null;
+  portfolio_url?: string | null;
+  message: string;
+  status: string;
+  created_at: string;
 };
 
 type NightbloomPdf = {
@@ -182,6 +196,7 @@ const tabDefs = [
   { id: "revenue", label: "Revenue", icon: ChartColumn },
   { id: "book_of_roots", label: "Book of Roots", icon: BookOpen },
   { id: "analytics", label: "Analytics", icon: Activity },
+  { id: "guild", label: "Guild", icon: Briefcase },
 ] as const;
 
 const officeTabOptions = tabDefs.map((tab) => tab.id);
@@ -267,6 +282,7 @@ function Office() {
           )}
           {tab === "revenue" && <Revenue orders={data.orders} />}
           {tab === "analytics" && <Analytics analytics={data.analytics} />}
+          {tab === "guild" && <Guild applications={data.guildApplications} refresh={refresh} setMessage={setMessage} />}
           {message && <p className="rounded-md border border-gold/40 bg-forest px-4 py-3 text-sm text-parchment">{message}</p>}
         </div>
       </div>
@@ -511,6 +527,124 @@ function Orders({ orders, products }: { orders: OrderRow[]; products: ProductRow
             })}
           </tbody>
         </table>
+      </div>
+    </Panel>
+  );
+}
+
+const guildStatuses = ["new", "reviewing", "contacted", "archived"] as const;
+
+function Guild({ applications, refresh, setMessage }: { applications: GuildApplication[]; refresh: () => Promise<void>; setMessage: (value: string) => void }) {
+  const [filter, setFilter] = useState<string>("all");
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { all: applications.length };
+    for (const status of guildStatuses) map[status] = 0;
+    for (const app of applications) map[app.status] = (map[app.status] ?? 0) + 1;
+    return map;
+  }, [applications]);
+
+  const shown = useMemo(
+    () => (filter === "all" ? applications : applications.filter((app) => app.status === filter)),
+    [applications, filter],
+  );
+
+  async function updateStatus(id: number, status: string) {
+    const response = await fetch("/api/office/guild", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "Application updated." : "Could not update application."));
+    await refresh();
+  }
+
+  async function remove(id: number) {
+    if (!confirm("Remove this application permanently?")) return;
+    const response = await fetch(`/api/office/guild?id=${id}`, { method: "DELETE" });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "Application removed." : "Could not remove application."));
+    await refresh();
+  }
+
+  return (
+    <Panel title="Guild Applications">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(["all", ...guildStatuses] as const).map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest ${
+              filter === status ? "bg-gold text-forest" : "bg-parchment-dark/40 text-forest hover:bg-parchment-dark/60"
+            }`}
+          >
+            {status} ({counts[status] ?? 0})
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {shown.map((app) => {
+          const open = expanded === app.id;
+          return (
+            <div key={app.id} className="rounded-md border border-gold/25 bg-parchment/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <button onClick={() => setExpanded(open ? null : app.id)} className="text-left">
+                  <div className="font-semibold text-forest">{app.full_name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {app.email}
+                    {app.job_title ? ` · ${app.job_title}` : ""}
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+                    {new Date(app.created_at).toLocaleDateString()}
+                  </div>
+                </button>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={app.status}
+                    onChange={(event) => void updateStatus(app.id, event.target.value)}
+                    className="rounded-md border border-gold/40 bg-parchment px-2 py-1 text-xs text-forest"
+                  >
+                    {guildStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => void remove(app.id)}
+                    className="rounded-md border border-gold/40 p-1.5 text-forest hover:bg-parchment-dark/40"
+                    aria-label="Remove application"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              {open && (
+                <div className="mt-3 space-y-2 border-t border-gold/20 pt-3 text-sm text-forest">
+                  <p className="whitespace-pre-wrap">{app.message}</p>
+                  {app.portfolio_url && (
+                    <a
+                      href={app.portfolio_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-forest underline"
+                    >
+                      <Link2 className="h-4 w-4" /> Portfolio
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {shown.length === 0 && (
+          <p className="rounded-md border border-gold/25 bg-parchment/70 p-4 text-sm text-muted-foreground">
+            No applications in this view.
+          </p>
+        )}
       </div>
     </Panel>
   );
