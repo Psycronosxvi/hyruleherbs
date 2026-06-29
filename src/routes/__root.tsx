@@ -169,6 +169,17 @@ function RootComponent() {
       .then((response) => response.json())
       .then((data) => setAnnouncement(typeof data.message === "string" ? data.message : ""))
       .catch(() => setAnnouncement(""));
+
+    // Record an anonymous page view for network analytics.
+    void fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: url.pathname,
+        referrer: document.referrer || null,
+        source: src || null,
+      }),
+    }).catch(() => undefined);
   }, []);
 
   return (
