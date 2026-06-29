@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -10,10 +10,14 @@ import {
   YAxis,
 } from "recharts";
 import {
+  Activity,
+  Ban,
   Bell,
   BookOpen,
+  Briefcase,
   ChartColumn,
   Command,
+  FileText,
   History,
   KeyRound,
   Link2,
@@ -21,6 +25,7 @@ import {
   Package,
   Plus,
   ShieldCheck,
+  ShieldOff,
   ShoppingBag,
   UserCog,
   Users,
@@ -82,7 +87,36 @@ type UserRow = {
   role: string;
   rupees: number;
   active: boolean;
+  blocked?: boolean;
+  last_ip?: string | null;
   created_at: string;
+};
+
+type BannedIp = {
+  id: number;
+  ip_address: string;
+  reason?: string | null;
+  created_by?: string | null;
+  created_at: string;
+};
+
+type AuditDocument = {
+  id: number;
+  title: string;
+  description?: string | null;
+  file_url: string;
+  uploaded_by?: string | null;
+  created_at: string;
+};
+
+type AnalyticsData = {
+  totalViews: number;
+  views24h: number;
+  views7d: number;
+  uniqueVisitors7d: number;
+  topPages: Array<{ label: string; count: number }>;
+  topSources: Array<{ label: string; count: number }>;
+  daily: Array<{ date: string; views: number }>;
 };
 
 type RupeeEventRow = {
@@ -115,10 +149,26 @@ type OfficeData = {
   marketingLinks: MarketingLink[];
   users: UserRow[];
   tabAccess: Array<{ id: number; user_email: string; tab_id: string }>;
-  announcement: { message: string; active: boolean };
+  announcement: { message: string; active: boolean; audience?: string };
   auditLog: Array<{ id: number; user_email?: string; action_type: string; details: unknown; created_at: string }>;
   nightbloomPdfs: NightbloomPdf[];
   bookOfRoots: BookOfRootsAdminEntry[];
+  bannedIps: BannedIp[];
+  auditDocuments: AuditDocument[];
+  analytics: AnalyticsData;
+  guildApplications: GuildApplication[];
+};
+
+type GuildApplication = {
+  id: number;
+  full_name: string;
+  email: string;
+  job_id?: string | null;
+  job_title?: string | null;
+  portfolio_url?: string | null;
+  message: string;
+  status: string;
+  created_at: string;
 };
 
 type NightbloomPdf = {
@@ -145,6 +195,8 @@ const tabDefs = [
   { id: "audit", label: "Audit", icon: UserCog },
   { id: "revenue", label: "Revenue", icon: ChartColumn },
   { id: "book_of_roots", label: "Book of Roots", icon: BookOpen },
+  { id: "analytics", label: "Analytics", icon: Activity },
+  { id: "guild", label: "Guild", icon: Briefcase },
 ] as const;
 
 const officeTabOptions = tabDefs.map((tab) => tab.id);
@@ -217,7 +269,7 @@ function Office() {
           {tab === "products" && <Products products={data.products} refresh={refresh} setMessage={setMessage} />}
           {tab === "orders" && <Orders orders={data.orders} products={data.products} />}
           {tab === "marketing" && <Marketing data={data} refresh={refresh} setMessage={setMessage} />}
-          {tab === "users" && <UsersTab users={data.users} refresh={refresh} setMessage={setMessage} />}
+          {tab === "users" && <UsersTab users={data.users} bannedIps={data.bannedIps} refresh={refresh} setMessage={setMessage} />}
           {tab === "access" && <AccessTab access={data.tabAccess} refresh={refresh} setMessage={setMessage} />}
           {tab === "announcements" && <Announcements data={data} refresh={refresh} setMessage={setMessage} />}
           {tab === "nightbloom" && <NightbloomManager rows={data.nightbloomPdfs} refresh={refresh} setMessage={setMessage} />}
@@ -225,8 +277,12 @@ function Office() {
             <BookOfRootsAdmin entries={data.bookOfRoots} products={data.products} refresh={refresh} setMessage={setMessage} />
           )}
           {tab === "command" && <CommandWindow setMessage={setMessage} />}
-          {tab === "audit" && <Audit rows={data.auditLog} />}
+          {tab === "audit" && (
+            <Audit rows={data.auditLog} documents={data.auditDocuments} orders={data.orders} refresh={refresh} setMessage={setMessage} />
+          )}
           {tab === "revenue" && <Revenue orders={data.orders} />}
+          {tab === "analytics" && <Analytics analytics={data.analytics} />}
+          {tab === "guild" && <Guild applications={data.guildApplications} refresh={refresh} setMessage={setMessage} />}
           {message && <p className="rounded-md border border-gold/40 bg-forest px-4 py-3 text-sm text-parchment">{message}</p>}
         </div>
       </div>
@@ -261,6 +317,43 @@ function Dashboard({ data }: { data: OfficeData }) {
 }
 
 function Products({ products, refresh, setMessage }: { products: ProductRow[]; refresh: () => Promise<void>; setMessage: (value: string) => void }) {
+  const PAGE = 8;
+  const [query, setQuery] = useState("");
+  const [visible, setVisible] = useState(PAGE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(q) ||
+        product.slug.toLowerCase().includes(q) ||
+        product.category.toLowerCase().includes(q),
+    );
+  }, [products, query]);
+
+  useEffect(() => {
+    setVisible(PAGE);
+  }, [query]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisible((current) => Math.min(current + PAGE, filtered.length));
+        }
+      },
+      { rootMargin: "320px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [filtered.length]);
+
+  const shown = filtered.slice(0, visible);
+
   async function save(product: ProductRow, form: HTMLFormElement) {
     const formData = new FormData(form);
     const response = await fetch("/api/office/product", {
@@ -291,8 +384,19 @@ function Products({ products, refresh, setMessage }: { products: ProductRow[]; r
 
   return (
     <Panel title="Products">
-      <div className="space-y-3">
-        {products.map((product) => (
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search products by name, slug, or category"
+          className="min-w-0 flex-1 rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest"
+        />
+        <span className="text-xs uppercase tracking-widest text-muted-foreground">
+          Showing {Math.min(shown.length, filtered.length)} of {filtered.length}
+        </span>
+      </div>
+      <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
+        {shown.map((product) => (
           <form
             key={product.slug}
             onSubmit={(event) => {
@@ -382,6 +486,16 @@ function Products({ products, refresh, setMessage }: { products: ProductRow[]; r
             </div>
           </form>
         ))}
+        {filtered.length === 0 && (
+          <p className="rounded-md border border-gold/25 bg-parchment/70 p-4 text-sm text-muted-foreground">
+            No products match your search.
+          </p>
+        )}
+        {shown.length < filtered.length && (
+          <div ref={sentinelRef} className="py-4 text-center text-xs uppercase tracking-widest text-muted-foreground">
+            Loading more products...
+          </div>
+        )}
       </div>
     </Panel>
   );
@@ -413,6 +527,124 @@ function Orders({ orders, products }: { orders: OrderRow[]; products: ProductRow
             })}
           </tbody>
         </table>
+      </div>
+    </Panel>
+  );
+}
+
+const guildStatuses = ["new", "reviewing", "contacted", "archived"] as const;
+
+function Guild({ applications, refresh, setMessage }: { applications: GuildApplication[]; refresh: () => Promise<void>; setMessage: (value: string) => void }) {
+  const [filter, setFilter] = useState<string>("all");
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const counts = useMemo(() => {
+    const map: Record<string, number> = { all: applications.length };
+    for (const status of guildStatuses) map[status] = 0;
+    for (const app of applications) map[app.status] = (map[app.status] ?? 0) + 1;
+    return map;
+  }, [applications]);
+
+  const shown = useMemo(
+    () => (filter === "all" ? applications : applications.filter((app) => app.status === filter)),
+    [applications, filter],
+  );
+
+  async function updateStatus(id: number, status: string) {
+    const response = await fetch("/api/office/guild", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "Application updated." : "Could not update application."));
+    await refresh();
+  }
+
+  async function remove(id: number) {
+    if (!confirm("Remove this application permanently?")) return;
+    const response = await fetch(`/api/office/guild?id=${id}`, { method: "DELETE" });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "Application removed." : "Could not remove application."));
+    await refresh();
+  }
+
+  return (
+    <Panel title="Guild Applications">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(["all", ...guildStatuses] as const).map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilter(status)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest ${
+              filter === status ? "bg-gold text-forest" : "bg-parchment-dark/40 text-forest hover:bg-parchment-dark/60"
+            }`}
+          >
+            {status} ({counts[status] ?? 0})
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {shown.map((app) => {
+          const open = expanded === app.id;
+          return (
+            <div key={app.id} className="rounded-md border border-gold/25 bg-parchment/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <button onClick={() => setExpanded(open ? null : app.id)} className="text-left">
+                  <div className="font-semibold text-forest">{app.full_name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {app.email}
+                    {app.job_title ? ` · ${app.job_title}` : ""}
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+                    {new Date(app.created_at).toLocaleDateString()}
+                  </div>
+                </button>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={app.status}
+                    onChange={(event) => void updateStatus(app.id, event.target.value)}
+                    className="rounded-md border border-gold/40 bg-parchment px-2 py-1 text-xs text-forest"
+                  >
+                    {guildStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => void remove(app.id)}
+                    className="rounded-md border border-gold/40 p-1.5 text-forest hover:bg-parchment-dark/40"
+                    aria-label="Remove application"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              {open && (
+                <div className="mt-3 space-y-2 border-t border-gold/20 pt-3 text-sm text-forest">
+                  <p className="whitespace-pre-wrap">{app.message}</p>
+                  {app.portfolio_url && (
+                    <a
+                      href={app.portfolio_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-forest underline"
+                    >
+                      <Link2 className="h-4 w-4" /> Portfolio
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {shown.length === 0 && (
+          <p className="rounded-md border border-gold/25 bg-parchment/70 p-4 text-sm text-muted-foreground">
+            No applications in this view.
+          </p>
+        )}
       </div>
     </Panel>
   );
@@ -456,8 +688,22 @@ function Marketing({ data, refresh, setMessage }: { data: OfficeData; refresh: (
   );
 }
 
-function UsersTab({ users, refresh, setMessage }: { users: UserRow[]; refresh: () => Promise<void>; setMessage: (value: string) => void }) {
+function UsersTab({ users, bannedIps, refresh, setMessage }: { users: UserRow[]; bannedIps: BannedIp[]; refresh: () => Promise<void>; setMessage: (value: string) => void }) {
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [manualIp, setManualIp] = useState("");
+  const [manualReason, setManualReason] = useState("");
+  const bannedSet = useMemo(() => new Set(bannedIps.map((row) => row.ip_address)), [bannedIps]);
+
+  async function banIp(ip: string, action: "ban" | "unban", reason?: string) {
+    const response = await fetch("/api/office/ban-ip", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ip_address: ip, action, reason }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "IP updated." : "Could not update IP."));
+    await refresh();
+  }
   const [allAmount, setAllAmount] = useState("");
   const [historyUser, setHistoryUser] = useState<UserRow | null>(null);
   const [history, setHistory] = useState<RupeeEventRow[]>([]);
@@ -534,7 +780,7 @@ function UsersTab({ users, refresh, setMessage }: { users: UserRow[]; refresh: (
           Give Rupees to All
         </button>
       </form>
-      <Table headers={["User", "Role", "Rupees", "Status", "Actions"]}>
+      <Table headers={["User", "Role", "Rupees", "Status", "Last IP", "Actions"]}>
         {users.map((user) => (
           <tr key={user.id}>
             <td className="py-3"><div className="font-medium text-forest">{user.full_name || user.email}</div><div className="text-xs text-muted-foreground">{user.email}</div></td>
@@ -570,11 +816,80 @@ function UsersTab({ users, refresh, setMessage }: { users: UserRow[]; refresh: (
                 </button>
               </div>
             </td>
-            <td>{user.active ? "Active" : "Inactive"}</td>
-            <td><button onClick={() => void update(user, { active: !user.active })} className="rounded-md border border-gold/40 px-3 py-1.5 text-xs text-forest">{user.active ? "Deactivate" : "Activate"}</button></td>
+            <td>
+              {user.blocked ? (
+                <span className="rounded-full bg-ember px-2 py-0.5 text-xs font-semibold text-parchment">Blocked</span>
+              ) : (
+                <span className={user.active ? "text-forest" : "text-muted-foreground"}>{user.active ? "Active" : "Inactive"}</span>
+              )}
+            </td>
+            <td className="text-xs text-muted-foreground">
+              {user.last_ip ? (
+                <div className="flex items-center gap-2">
+                  <code>{user.last_ip}</code>
+                  {bannedSet.has(user.last_ip) ? (
+                    <span className="text-[10px] uppercase tracking-widest text-ember">banned</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void banIp(user.last_ip as string, "ban", `Banned via user ${user.email}`)}
+                      className="inline-flex items-center gap-1 rounded-md border border-gold/40 px-2 py-1 text-[11px] font-semibold text-forest"
+                    >
+                      <Ban className="h-3 w-3" /> Ban IP
+                    </button>
+                  )}
+                </div>
+              ) : (
+                "—"
+              )}
+            </td>
+            <td>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => void update(user, { active: !user.active })} className="rounded-md border border-gold/40 px-3 py-1.5 text-xs text-forest">{user.active ? "Deactivate" : "Activate"}</button>
+                <button
+                  onClick={() => void update(user, { blocked: !user.blocked })}
+                  className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold ${user.blocked ? "border border-gold/40 text-forest" : "bg-ember text-parchment"}`}
+                >
+                  {user.blocked ? <><ShieldOff className="h-3.5 w-3.5" /> Unblock</> : <><Ban className="h-3.5 w-3.5" /> Block / Kick</>}
+                </button>
+              </div>
+            </td>
           </tr>
         ))}
       </Table>
+
+      <div className="mt-8 rounded-md border border-gold/25 bg-parchment/70 p-4">
+        <h3 className="font-display text-xl text-forest">Banned IP Addresses</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Banned visitors are blocked from the site on their next page load.</p>
+        <form
+          className="mt-3 flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!manualIp.trim()) return;
+            void banIp(manualIp.trim(), "ban", manualReason.trim() || undefined);
+            setManualIp("");
+            setManualReason("");
+          }}
+        >
+          <input value={manualIp} onChange={(event) => setManualIp(event.target.value)} placeholder="123.45.67.89" className="w-44 rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+          <input value={manualReason} onChange={(event) => setManualReason(event.target.value)} placeholder="Reason (optional)" className="min-w-0 flex-1 rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+          <button className="inline-flex items-center gap-1 rounded-md bg-ember px-4 py-2 text-sm font-semibold text-parchment"><Ban className="h-4 w-4" /> Ban IP</button>
+        </form>
+        {bannedIps.length > 0 ? (
+          <Table headers={["IP Address", "Reason", "Banned By", "Actions"]}>
+            {bannedIps.map((row) => (
+              <tr key={row.id}>
+                <td className="py-3"><code className="text-forest">{row.ip_address}</code></td>
+                <td className="text-sm text-muted-foreground">{row.reason || "—"}</td>
+                <td className="text-xs text-muted-foreground">{row.created_by || "system"}</td>
+                <td><button onClick={() => void banIp(row.ip_address, "unban")} className="rounded-md border border-gold/40 px-3 py-1.5 text-xs text-forest">Unban</button></td>
+              </tr>
+            ))}
+          </Table>
+        ) : (
+          <p className="mt-3 text-sm text-muted-foreground">No IP addresses are banned.</p>
+        )}
+      </div>
       {historyUser && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-forest/70 px-4">
           <div className="parchment-card max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-lg">
@@ -652,16 +967,32 @@ function Announcements({ data, refresh, setMessage }: { data: OfficeData; refres
     const response = await fetch("/api/office/announcement", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message: form.get("message"), active: form.get("active") === "on" }),
+      body: JSON.stringify({
+        message: form.get("message"),
+        active: form.get("active") === "on",
+        audience: form.get("audience") || "site",
+      }),
     });
     const result = await response.json().catch(() => ({}));
     setMessage(result.message || "Announcement saved.");
     await refresh();
   }
+  const audience = data.announcement.audience === "employees" ? "employees" : "site";
   return (
     <Panel title="Site Announcements">
-      <form onSubmit={save} className="space-y-3">
-        <textarea name="message" defaultValue={data.announcement.message} className="h-28 w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+      <form onSubmit={save} className="space-y-4">
+        <textarea name="message" defaultValue={data.announcement.message} placeholder="Announcement message shown in the site banner" className="h-28 w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-semibold uppercase tracking-widest text-forest">Audience</legend>
+          <label className="flex items-start gap-2 text-sm text-forest">
+            <input type="radio" name="audience" value="site" defaultChecked={audience === "site"} className="mt-1" />
+            <span><span className="font-semibold">Site-wide</span> — visible to every visitor.</span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-forest">
+            <input type="radio" name="audience" value="employees" defaultChecked={audience === "employees"} className="mt-1" />
+            <span><span className="font-semibold">Employees only</span> — visible only to users with office access.</span>
+          </label>
+        </fieldset>
         <label className="flex items-center gap-2 text-sm text-forest"><input type="checkbox" name="active" defaultChecked={data.announcement.active} /> Active</label>
         <button className="rounded-md bg-forest px-4 py-2 text-sm font-semibold text-parchment">Save banner</button>
       </form>
@@ -763,36 +1094,126 @@ function CommandWindow({ setMessage }: { setMessage: (value: string) => void }) 
 
   return (
     <Panel title="President Command Window">
-      <div className="mb-4 rounded-md border border-gold/30 bg-forest p-4 text-sm text-parchment">
-        Safe commands only. Type <code>help</code> for the current command list.
+      <div className="mb-4 rounded-md border border-gold/40 bg-forest p-4 text-sm text-parchment">
+        Safe commands only. Type <code className="rounded bg-parchment/20 px-1.5 py-0.5 font-mono text-gold">help</code> for the current command list.
       </div>
       <form onSubmit={run} className="flex gap-2">
-        <input value={command} onChange={(event) => setCommand(event.target.value)} placeholder='announcement set message="Shipping delay today" active=true' className="min-w-0 flex-1 rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
-        <button className="rounded-md bg-forest px-4 py-2 text-sm font-semibold text-parchment">Run</button>
+        <input
+          value={command}
+          onChange={(event) => setCommand(event.target.value)}
+          placeholder='announcement set message="Shipping delay today" active=true'
+          className="min-w-0 flex-1 rounded-md border border-gold/50 bg-parchment px-3 py-2 font-mono text-sm text-forest placeholder:text-forest/50"
+        />
+        <button className="rounded-md bg-gold px-4 py-2 text-sm font-semibold text-forest">Run</button>
       </form>
-      <div className="mt-4 space-y-2">
-        {history.map((line) => (
-          <pre key={line} className="whitespace-pre-wrap rounded-md border border-gold/25 bg-parchment/70 p-3 text-xs text-forest">{line}</pre>
-        ))}
+      <div className="mt-4 space-y-2 rounded-md border border-gold/30 bg-forest p-3">
+        {history.length === 0 ? (
+          <p className="px-1 py-2 font-mono text-xs text-parchment/70">Command output will appear here.</p>
+        ) : (
+          history.map((line) => (
+            <pre key={line} className="whitespace-pre-wrap rounded-md bg-parchment/10 p-3 font-mono text-xs leading-relaxed text-parchment">{line}</pre>
+          ))
+        )}
       </div>
     </Panel>
   );
 }
 
-function Audit({ rows }: { rows: OfficeData["auditLog"] }) {
+function Audit({
+  rows,
+  documents,
+  orders,
+  refresh,
+  setMessage,
+}: {
+  rows: OfficeData["auditLog"];
+  documents: AuditDocument[];
+  orders: OrderRow[];
+  refresh: () => Promise<void>;
+  setMessage: (value: string) => void;
+}) {
+  const paid = orders.filter((order) => order.status === "paid");
+  const grossRevenue = orders.reduce((sum, order) => sum + order.total_cents, 0) / 100;
+  const paidRevenue = paid.reduce((sum, order) => sum + order.total_cents, 0) / 100;
+  const avgOrder = orders.length ? grossRevenue / orders.length : 0;
+  const ytd = orders
+    .filter((order) => new Date(order.created_at).getFullYear() === new Date().getFullYear())
+    .reduce((sum, order) => sum + order.total_cents, 0) / 100;
+
+  async function uploadDoc(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const response = await fetch("/api/office/audit-doc", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        title: data.get("title"),
+        description: data.get("description"),
+        file_url: data.get("file_url"),
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || (response.ok ? "Audit document uploaded." : "Could not upload document."));
+    if (response.ok) form.reset();
+    await refresh();
+  }
+
+  async function removeDoc(id: number) {
+    const response = await fetch(`/api/office/audit-doc?id=${id}`, { method: "DELETE" });
+    const result = await response.json().catch(() => ({}));
+    setMessage(result.message || "Audit document removed.");
+    await refresh();
+  }
+
   return (
-    <Panel title="Audit Log">
-      <Table headers={["Time", "User", "Action", "Details"]}>
-        {rows.map((row) => (
-          <tr key={row.id}>
-            <td className="py-3">{new Date(row.created_at).toLocaleString()}</td>
-            <td>{row.user_email || "system"}</td>
-            <td className="font-medium text-forest">{row.action_type}</td>
-            <td><code>{JSON.stringify(row.details)}</code></td>
-          </tr>
-        ))}
-      </Table>
-    </Panel>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Gross revenue" value={`$${grossRevenue.toFixed(2)}`} />
+        <Metric label="Confirmed (paid)" value={`$${paidRevenue.toFixed(2)}`} />
+        <Metric label="Revenue YTD" value={`$${ytd.toFixed(2)}`} />
+        <Metric label="Avg order value" value={`$${avgOrder.toFixed(2)}`} />
+      </div>
+
+      <Panel title="Audit Documents">
+        <form onSubmit={uploadDoc} className="mb-5 grid gap-3 rounded-md border border-gold/25 bg-parchment/70 p-4 md:grid-cols-2">
+          <input name="title" required placeholder="Document title (e.g. Q3 Financial Statement)" className="rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+          <input name="file_url" required type="url" placeholder="PDF URL (https://...)" className="rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest" />
+          <textarea name="description" placeholder="Description (optional)" className="h-20 rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm text-forest md:col-span-2" />
+          <div className="md:col-span-2">
+            <button className="inline-flex items-center gap-1 rounded-md bg-forest px-4 py-2 text-sm font-semibold text-parchment"><FileText className="h-4 w-4" /> Upload document</button>
+          </div>
+        </form>
+        {documents.length > 0 ? (
+          <Table headers={["Title", "Description", "Uploaded By", "Document", "Actions"]}>
+            {documents.map((doc) => (
+              <tr key={doc.id}>
+                <td className="py-3 font-medium text-forest">{doc.title}</td>
+                <td className="text-sm text-muted-foreground">{doc.description || "—"}</td>
+                <td className="text-xs text-muted-foreground">{doc.uploaded_by || "system"}</td>
+                <td><a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-forest underline">Open PDF</a></td>
+                <td><button onClick={() => void removeDoc(doc.id)} className="rounded-md border border-gold/40 px-3 py-1.5 text-xs text-forest">Delete</button></td>
+              </tr>
+            ))}
+          </Table>
+        ) : (
+          <p className="text-sm text-muted-foreground">No audit documents uploaded yet.</p>
+        )}
+      </Panel>
+
+      <Panel title="Audit Log">
+        <Table headers={["Time", "User", "Action", "Details"]}>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <td className="py-3">{new Date(row.created_at).toLocaleString()}</td>
+              <td>{row.user_email || "system"}</td>
+              <td className="font-medium text-forest">{row.action_type}</td>
+              <td><code className="text-xs text-muted-foreground">{JSON.stringify(row.details)}</code></td>
+            </tr>
+          ))}
+        </Table>
+      </Panel>
+    </div>
   );
 }
 
@@ -851,6 +1272,69 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="parchment-card rounded-lg p-4">
       <div className="text-xs uppercase tracking-widest text-[#4a3728]">{label}</div>
       <div className="mt-2 font-display text-2xl text-[#1a1a1a]">{value}</div>
+    </div>
+  );
+}
+
+function Analytics({ analytics }: { analytics: AnalyticsData }) {
+  if (!analytics) {
+    return <Panel title="Network Analytics"><p className="text-sm text-muted-foreground">No analytics data available yet.</p></Panel>;
+  }
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Views (24h)" value={String(analytics.views24h)} />
+        <Metric label="Views (7d)" value={String(analytics.views7d)} />
+        <Metric label="Unique visitors (7d)" value={String(analytics.uniqueVisitors7d)} />
+        <Metric label="Total views" value={String(analytics.totalViews)} />
+      </div>
+      <Panel title="Traffic (last 7 days)">
+        {analytics.daily.length > 0 ? (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.daily}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="views" fill="#d4af37" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No visits recorded in the last 7 days.</p>
+        )}
+      </Panel>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Panel title="Top pages">
+          {analytics.topPages.length > 0 ? (
+            <ul className="space-y-2 text-sm">
+              {analytics.topPages.map((row) => (
+                <li key={row.label} className="flex justify-between border-b border-gold/20 pb-2">
+                  <span className="truncate text-forest">{row.label}</span>
+                  <span className="font-semibold text-forest">{row.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No page data yet.</p>
+          )}
+        </Panel>
+        <Panel title="Traffic sources">
+          {analytics.topSources.length > 0 ? (
+            <ul className="space-y-2 text-sm">
+              {analytics.topSources.map((row) => (
+                <li key={row.label} className="flex justify-between border-b border-gold/20 pb-2">
+                  <span className="truncate text-forest">{row.label}</span>
+                  <span className="font-semibold text-forest">{row.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No source data yet.</p>
+          )}
+        </Panel>
+      </div>
     </div>
   );
 }

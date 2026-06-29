@@ -120,6 +120,39 @@ export const Route = createFileRoute("/careers")({
 function Careers() {
   const [active, setActive] = useState<Job | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submitApplication(event: React.FormEvent<HTMLFormElement>, job: Job) {
+    event.preventDefault();
+    setError("");
+    setSubmitting(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/careers/apply", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          full_name: form.get("full_name"),
+          email: form.get("email"),
+          portfolio_url: form.get("portfolio_url"),
+          message: form.get("message"),
+          job_id: job.id,
+          job_title: job.title,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { message?: string };
+      if (!response.ok) {
+        setError(data.message || "Something went wrong. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError("Could not reach the server. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="dark-page mx-auto max-w-5xl px-4 py-16">
@@ -156,6 +189,7 @@ function Careers() {
               onClick={() => {
                 setActive(job);
                 setSubmitted(false);
+                setError("");
               }}
               className="mt-4 inline-flex rounded-md bg-forest px-4 py-2 text-sm font-semibold text-parchment hover:bg-forest/90"
             >
@@ -190,39 +224,43 @@ function Careers() {
                     </li>
                   ))}
                 </ul>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSubmitted(true);
-                  }}
-                  className="mt-6 space-y-3"
-                >
+                <form onSubmit={(e) => void submitApplication(e, active)} className="mt-6 space-y-3">
                   <input
                     required
+                    name="full_name"
                     placeholder="Full name"
                     className="w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
                   />
                   <input
                     required
                     type="email"
+                    name="email"
                     placeholder="Email"
                     className="w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
                   />
                   <input
+                    name="portfolio_url"
                     placeholder="Link to portfolio or resume"
                     className="w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
                   />
                   <textarea
                     required
+                    name="message"
                     placeholder="Why this role calls to you"
                     rows={4}
                     className="w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
                   />
+                  {error && (
+                    <p className="rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive" role="alert">
+                      {error}
+                    </p>
+                  )}
                   <button
                     type="submit"
-                    className="w-full rounded-md bg-forest px-4 py-2.5 font-semibold text-parchment hover:bg-forest/90"
+                    disabled={submitting}
+                    className="w-full rounded-md bg-forest px-4 py-2.5 font-semibold text-parchment hover:bg-forest/90 disabled:opacity-60"
                   >
-                    Send application
+                    {submitting ? "Sending..." : "Send application"}
                   </button>
                 </form>
               </>

@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DUAcabCT.js";var t=e(),n=()=>(0,t.jsx)(`div`,{className:`mx-auto max-w-2xl px-4 py-20 text-center`,children:(0,t.jsx)(`h1`,{className:`font-display text-3xl text-gold`,children:`A spell misfired`})});export{n as errorComponent};

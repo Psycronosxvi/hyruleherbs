@@ -1,0 +1,32 @@
+{
+  "compatibility_date": "2025-01-01",
+  "name": "hyrule-herb-apothecary",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "index.mjs",
+  "assets": {
+    "directory": "../client",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    {
+      "pattern": "hyruleherb.xyz",
+      "zone_name": "hyruleherb.xyz",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "PRESIDENT_EMAIL": "blackhatterxvi@gmail.com"
+  },
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": [
+        "**/*.mjs",
+        "**/*.js"
+      ]
+    }
+  ]
+}

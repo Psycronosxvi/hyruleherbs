@@ -19,6 +19,7 @@ import { culturalBooks, pdfStoreCategories, type CulturalBook } from "@/lib/cult
 import {
   ingredientTypeOptions,
   purposeOptions,
+  starterBookOfRoots,
   traditionOptions,
   type BookOfRootsEntry,
 } from "@/lib/book-of-roots";
@@ -56,11 +57,13 @@ function BookOfRootsPage() {
         return (await response.json()) as { entries?: BookOfRootsEntry[] };
       })
       .then((data) => {
-        setEntries(data.entries ?? []);
+        // Use live Supabase entries when present; otherwise fall back to the bundled archive
+        // so the page is never empty for visitors.
+        setEntries(data.entries && data.entries.length > 0 ? data.entries : starterBookOfRoots);
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setEntries([]);
+        setEntries(starterBookOfRoots);
       })
       .finally(() => setEntriesLoading(false));
 
@@ -144,13 +147,15 @@ function BookOfRootsPage() {
           <div className="parchment-card rounded-lg p-10 text-center">
             <Leaf className="mx-auto h-8 w-8 text-gold" />
             <h2 className="mt-4 font-display text-2xl text-forest">Gathering the root archive</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Fetching the latest entries from Supabase.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Unrolling the plant scrolls for you.</p>
           </div>
         ) : entries.length === 0 ? (
           <div className="parchment-card rounded-lg p-10 text-center">
             <Leaf className="mx-auto h-8 w-8 text-gold" />
-            <h2 className="mt-4 font-display text-2xl text-forest">No Book of Roots entries yet</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Add entries in Supabase to publish them here.</p>
+            <h2 className="mt-4 font-display text-2xl text-forest">New roots are being gathered</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Fresh entries are on the way—check back soon for more plants and traditions.
+            </p>
           </div>
         ) : filteredEntries.length ? (
           <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -433,12 +438,12 @@ function PdfStoreSection() {
       {loading ? (
         <div className="parchment-card rounded-lg p-8 text-center">
           <p className="font-display text-xl text-forest">Loading PDF shelves...</p>
-          <p className="mt-2 text-sm text-muted-foreground">Fetching live book products from Supabase.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Pulling the latest booklets onto the shelf.</p>
         </div>
       ) : books.length === 0 ? (
         <div className="parchment-card rounded-lg p-8 text-center">
-          <p className="font-display text-xl text-forest">No PDF products are in stock.</p>
-          <p className="mt-2 text-sm text-muted-foreground">Add active book products with stock to show them here.</p>
+          <p className="font-display text-xl text-forest">New booklets are coming soon.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Our cultural recipe PDFs are being prepared—check back shortly.</p>
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">

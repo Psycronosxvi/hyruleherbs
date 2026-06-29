@@ -15,7 +15,9 @@ import { CartProvider } from "@/lib/cart";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SignupPopup } from "@/components/signup-popup";
-import { AmbientMusic } from "@/components/ambient-music";
+import { GlobalSoundtrack } from "@/components/global-soundtrack";
+import soundtrackOne from "@/assets/Herb Moon Caravan.mp3?url";
+import soundtrackTwo from "@/assets/Herb Moon Caravan (1).mp3?url";
 
 function NotFoundComponent() {
   return (
@@ -167,6 +169,17 @@ function RootComponent() {
       .then((response) => response.json())
       .then((data) => setAnnouncement(typeof data.message === "string" ? data.message : ""))
       .catch(() => setAnnouncement(""));
+
+    // Record an anonymous page view for network analytics.
+    void fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: url.pathname,
+        referrer: document.referrer || null,
+        source: src || null,
+      }),
+    }).catch(() => undefined);
   }, []);
 
   return (
@@ -185,7 +198,12 @@ function RootComponent() {
           <SiteFooter />
         </div>
         <SignupPopup />
-        <AmbientMusic />
+        <GlobalSoundtrack
+          tracks={[
+            { src: soundtrackOne, label: "Herb Moon Caravan" },
+            { src: soundtrackTwo, label: "Herb Moon Caravan II" },
+          ]}
+        />
       </CartProvider>
     </QueryClientProvider>
   );

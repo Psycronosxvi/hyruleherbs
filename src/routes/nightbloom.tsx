@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BookOpen, Download, Lock, Sparkles } from "lucide-react";
+import { BookOpen, Download, Lock, ShoppingBag, Sparkles } from "lucide-react";
 import nightbloomImg from "@/assets/nightbloom.jpg";
 import { useSession } from "@/lib/session";
 
@@ -23,16 +23,18 @@ type NightbloomPdf = {
   id: number;
   title: string;
   blurb: string;
-  pdf_url: string;
   cover_image_url?: string | null;
   price_cents: number;
   status: string;
+  unlocked: boolean;
 };
 
 function Nightbloom() {
   const session = useSession();
   const isMember = session?.authenticated ?? false;
   const [pdfs, setPdfs] = useState<NightbloomPdf[]>([]);
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -48,6 +50,55 @@ function Nightbloom() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("purchase") === "success") {
+      setNotice("Thank you! Your PDF is unlocked below.");
+    } else if (params.get("purchase") === "cancelled") {
+      setNotice("Checkout cancelled. Your card was not charged.");
+    }
+  }, []);
+
+  async function openPdf(book: NightbloomPdf) {
+    setBusyId(book.id);
+    try {
+      const response = await fetch(`/api/nightbloom/download?id=${book.id}`);
+      const data = (await response.json()) as { url?: string; message?: string };
+      if (response.ok && data.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      } else {
+        setNotice(data.message || "Could not open this PDF.");
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function buyPdf(book: NightbloomPdf) {
+    if (!isMember) {
+      window.location.href = "/signin?redirectTo=/nightbloom";
+      return;
+    }
+    setBusyId(book.id);
+    try {
+      const response = await fetch("/api/nightbloom/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: book.id }),
+      });
+      const data = (await response.json()) as { url?: string; message?: string };
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setNotice(data.message || "Could not start checkout.");
+        setBusyId(null);
+      }
+    } catch {
+      setNotice("Could not start checkout.");
+      setBusyId(null);
+    }
+  }
 
   return (
     <div className="bg-gradient-to-b from-[oklch(0.16_0.03_155)] to-[oklch(0.10_0.02_155)] text-parchment">
@@ -92,6 +143,11 @@ function Nightbloom() {
           <BookOpen className="h-6 w-6 text-gold" />
           <h2 className="font-display text-3xl text-gold">Member PDFs</h2>
         </div>
+        {notice && (
+          <div className="mb-6 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold" role="status">
+            {notice}
+          </div>
+        )}
         {pdfs.length === 0 ? (
           <div className="rounded-lg border border-gold/30 bg-black/35 p-8 text-parchment">
             No PDFs have been published yet.
@@ -118,19 +174,33 @@ function Nightbloom() {
                     <span className="font-display text-2xl text-gold">
                       {book.price_cents ? `$${(book.price_cents / 100).toFixed(2)}` : "Member"}
                     </span>
-                    {isMember ? (
-                      <a
-                        href={book.pdf_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-md border border-gold/50 px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10"
+                    {book.unlocked ? (
+                      <button
+                        type="button"
+                        onClick={() => void openPdf(book)}
+                        disabled={busyId === book.id}
+                        className="inline-flex items-center gap-2 rounded-md border border-gold/50 px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10 disabled:opacity-60"
                       >
-                        <Download className="h-4 w-4" /> Open PDF
-                      </a>
+                        <Download className="h-4 w-4" /> {busyId === book.id ? "Opening..." : "Open PDF"}
+                      </button>
+                    ) : book.price_cents > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => void buyPdf(book)}
+                        disabled={busyId === book.id}
+                        className="inline-flex items-center gap-2 rounded-md bg-gold px-3 py-1.5 text-sm font-semibold text-[oklch(0.18_0.03_150)] hover:opacity-90 disabled:opacity-60"
+                      >
+                        <ShoppingBag className="h-4 w-4" />
+                        {busyId === book.id ? "Starting..." : isMember ? "Buy & unlock" : "Sign in to buy"}
+                      </button>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-gold/50 px-3 py-1.5 text-sm font-medium text-gold opacity-70">
-                        <Lock className="h-3 w-3" /> Locked
-                      </span>
+                      <Link
+                        to="/signin"
+                        search={{ redirectTo: "/nightbloom" }}
+                        className="inline-flex items-center gap-1 rounded-md border border-gold/50 px-3 py-1.5 text-sm font-medium text-gold hover:bg-gold/10"
+                      >
+                        <Lock className="h-3 w-3" /> Sign in to unlock
+                      </Link>
                     )}
                   </div>
                 </div>
