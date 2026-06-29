@@ -15,7 +15,9 @@ import { CartProvider } from "@/lib/cart";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SignupPopup } from "@/components/signup-popup";
-import { AmbientMusic } from "@/components/ambient-music";
+import { GlobalSoundtrack } from "@/components/global-soundtrack";
+import soundtrackOne from "@/assets/Herb Moon Caravan.mp3?url";
+import soundtrackTwo from "@/assets/Herb Moon Caravan (1).mp3?url";
 
 function NotFoundComponent() {
   return (
@@ -185,7 +187,12 @@ function RootComponent() {
           <SiteFooter />
         </div>
         <SignupPopup />
-        <AmbientMusic />
+        <GlobalSoundtrack
+          tracks={[
+            { src: soundtrackOne, label: "Herb Moon Caravan" },
+            { src: soundtrackTwo, label: "Herb Moon Caravan II" },
+          ]}
+        />
       </CartProvider>
     </QueryClientProvider>
   );
