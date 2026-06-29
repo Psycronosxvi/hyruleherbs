@@ -97,7 +97,8 @@ type OfficeTab =
   | "revenue"
   | "nightbloom"
   | "command"
-  | "book_of_roots";
+  | "book_of_roots"
+  | "analytics";
 
 const DEFAULT_PRESIDENT_EMAIL = "blackhatterxvi@gmail.com";
 
@@ -393,6 +394,15 @@ async function getCurrentUser(request: Request, env: WorkerEnv) {
   const profile = email ? await getProfileByEmail(env, email).catch(() => undefined) : undefined;
   const role = email === presidentEmail(env) ? "president" : profile?.role || "user";
   return { session, email, profile, role, isPresident: role === "president" || email === presidentEmail(env) };
+}
+
+function getClientIp(request: Request) {
+  const headers = request.headers;
+  const candidate =
+    headers.get("cf-connecting-ip") ||
+    headers.get("x-real-ip") ||
+    (headers.get("x-forwarded-for") || "").split(",")[0]?.trim();
+  return candidate || null;
 }
 
 function cleanSecret(value: string | undefined) {
@@ -1156,6 +1166,7 @@ const roleTabs: Record<string, OfficeTab[]> = {
     "nightbloom",
     "command",
     "book_of_roots",
+    "analytics",
   ],
   admin: [
     "dashboard",
@@ -1170,6 +1181,7 @@ const roleTabs: Record<string, OfficeTab[]> = {
     "nightbloom",
     "command",
     "book_of_roots",
+    "analytics",
   ],
   it_coordinator: ["products", "orders"],
   marketing: ["marketing"],
@@ -1236,13 +1248,23 @@ async function handleReferralCapture(request: Request) {
   );
 }
 
-async function handleAnnouncement(env: WorkerEnv) {
-  const rows = await supabaseJson<Array<{ message: string; active: boolean }>>(
+async function handleAnnouncement(request: Request, env: WorkerEnv) {
+  const rows = await supabaseJson<Array<{ message: string; active: boolean; audience?: string }>>(
     env,
-    "/rest/v1/site_announcements?select=message,active&id=eq.1&limit=1",
+    "/rest/v1/site_announcements?select=message,active,audience&id=eq.1&limit=1",
   ).catch(() => []);
   const announcement = rows[0];
-  return json({ message: announcement?.active ? announcement.message : "" });
+  if (!announcement?.active || !announcement.message) {
+    return json({ message: "", audience: "site" });
+  }
+  const audience = announcement.audience === "employees" ? "employees" : "site";
+  // Employees-only announcements are withheld from the public unless the viewer has office access.
+  if (audience === "employees") {
+    const user = await getCurrentUser(request, env);
+    const tabs = user.email ? await allowedTabsForUser(env, user.email, user.role) : [];
+    if (tabs.length === 0) return json({ message: "", audience });
+  }
+  return json({ message: announcement.message, audience });
 }
 
 async function handleOfficeData(request: Request, env: WorkerEnv) {
@@ -1260,6 +1282,9 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     auditRows,
     nightbloomPdfs,
     bookOfRoots,
+    bannedIps,
+    auditDocuments,
+    pageViews,
   ] = await Promise.all([
     supabaseJson(
       env,
@@ -1267,15 +1292,18 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     ).catch(() => []),
     supabaseJson(env, "/rest/v1/orders?select=*,order_items(*)&order=created_at.desc&limit=100").catch(() => []),
     supabaseJson(env, "/rest/v1/marketing_links?select=*&order=created_at.desc").catch(() => []),
-    supabaseJson(env, "/rest/v1/profiles?select=id,email,full_name,role,rupees,active,created_at&order=created_at.desc").catch(() => []),
+    supabaseJson(env, "/rest/v1/profiles?select=id,email,full_name,role,rupees,active,blocked,last_ip,created_at&order=created_at.desc").catch(() => []),
     supabaseJson(env, "/rest/v1/office_tab_access?select=*").catch(() => []),
-    supabaseJson(env, "/rest/v1/site_announcements?select=message,active&id=eq.1&limit=1").catch(() => []),
+    supabaseJson(env, "/rest/v1/site_announcements?select=message,active,audience&id=eq.1&limit=1").catch(() => []),
     supabaseJson(env, "/rest/v1/audit_log?select=*&order=created_at.desc&limit=100").catch(() => []),
     supabaseJson(env, "/rest/v1/nightbloom_pdfs?select=*&order=sort_order.asc,created_at.desc").catch(() => []),
     supabaseJson(
       env,
       "/rest/v1/book_of_roots?select=id,name,image_url,traditions,purposes,ingredient_type,description,how_to_use,product_id,products:product_id(slug)&order=created_at.desc",
     ).catch(() => []),
+    supabaseJson(env, "/rest/v1/banned_ips?select=*&order=created_at.desc").catch(() => []),
+    supabaseJson(env, "/rest/v1/audit_documents?select=*&order=created_at.desc").catch(() => []),
+    supabaseJson(env, "/rest/v1/page_views?select=path,source,referrer,user_email,created_at&order=created_at.desc&limit=1000").catch(() => []),
   ]);
 
   return json({
@@ -1286,11 +1314,41 @@ async function handleOfficeData(request: Request, env: WorkerEnv) {
     marketingLinks,
     users,
     tabAccess,
-    announcement: Array.isArray(announcement) ? announcement[0] ?? { message: "", active: false } : { message: "", active: false },
+    announcement: Array.isArray(announcement)
+      ? announcement[0] ?? { message: "", active: false, audience: "site" }
+      : { message: "", active: false, audience: "site" },
     auditLog: auditRows,
     nightbloomPdfs,
     bookOfRoots,
+    bannedIps,
+    auditDocuments,
+    analytics: buildAnalytics(Array.isArray(pageViews) ? pageViews : []),
   });
+}
+
+function buildAnalytics(rows: Array<{ path?: string; source?: string | null; referrer?: string | null; user_email?: string | null; created_at?: string }>) {
+  const now = Date.now();
+  const last24h = rows.filter((row) => row.created_at && now - new Date(row.created_at).getTime() <= 86_400_000);
+  const last7d = rows.filter((row) => row.created_at && now - new Date(row.created_at).getTime() <= 7 * 86_400_000);
+  const tally = (items: string[]) => {
+    const map = new Map<string, number>();
+    items.forEach((item) => map.set(item, (map.get(item) ?? 0) + 1));
+    return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([label, count]) => ({ label, count }));
+  };
+  const byDay = new Map<string, number>();
+  last7d.forEach((row) => {
+    const key = new Date(row.created_at as string).toISOString().slice(0, 10);
+    byDay.set(key, (byDay.get(key) ?? 0) + 1);
+  });
+  return {
+    totalViews: rows.length,
+    views24h: last24h.length,
+    views7d: last7d.length,
+    uniqueVisitors7d: new Set(last7d.map((row) => row.user_email || "anon")).size,
+    topPages: tally(last7d.map((row) => row.path || "/")),
+    topSources: tally(last7d.map((row) => row.source || row.referrer || "direct")),
+    daily: [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, views]) => ({ date, views })),
+  };
 }
 
 async function handleOfficeProduct(request: Request, env: WorkerEnv) {
@@ -1335,34 +1393,145 @@ async function handleOfficeMarketing(request: Request, env: WorkerEnv) {
   if (!access.ok) return access.response;
   const body = (await request.json().catch(() => null)) as { employee_name?: string; employee_email?: string } | null;
   if (!body?.employee_name?.trim()) return json({ message: "Employee name is required." }, { status: 400 });
-  const employee = body.employee_email ? await getProfileByEmail(env, body.employee_email).catch(() => undefined) : undefined;
-  const linkCode = makeLinkCode(body.employee_name);
+  const employeeName = body.employee_name.trim();
+  const employeeEmail = body.employee_email?.trim().toLowerCase();
+
+  // Ensure the employee exists in the users list so names + emails surface there.
+  let employee = employeeEmail ? await getProfileByEmail(env, employeeEmail).catch(() => undefined) : undefined;
+  if (employeeEmail && isEmail(employeeEmail) && !employee) {
+    const id = crypto.randomUUID();
+    const created = await supabaseJson<Profile[]>(env, "/rest/v1/profiles?on_conflict=email", {
+      method: "POST",
+      prefer: "resolution=merge-duplicates,return=representation",
+      body: JSON.stringify({
+        id,
+        email: employeeEmail,
+        full_name: employeeName,
+        role: "marketing",
+        referral_code: referralCodeFromId(id),
+      }),
+    }).catch(() => []);
+    employee = created[0] ?? (await getProfileByEmail(env, employeeEmail).catch(() => undefined));
+  } else if (employee && employee.role === "user") {
+    await supabaseJson(env, `/rest/v1/profiles?id=eq.${eq(employee.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role: "marketing", full_name: employee.full_name || employeeName, updated_at: new Date().toISOString() }),
+    }).catch(() => undefined);
+  }
+
+  const linkCode = makeLinkCode(employeeName);
   await supabaseJson(env, "/rest/v1/marketing_links", {
     method: "POST",
     body: JSON.stringify({
       employee_id: employee?.id ?? null,
-      employee_name: body.employee_name.trim(),
+      employee_name: employeeName,
       link_code: linkCode,
     }),
   });
-  await audit(env, access.user.email, "marketing_link.create", { employee_name: body.employee_name, link_code: linkCode });
+  await audit(env, access.user.email, "marketing_link.create", { employee_name: employeeName, employee_email: employeeEmail ?? null, link_code: linkCode });
   return json({ message: "Marketing link created.", linkCode });
 }
 
 async function handleOfficeUser(request: Request, env: WorkerEnv) {
   const access = await requireOfficeAccess(request, env, "users");
   if (!access.ok) return access.response;
-  const body = (await request.json().catch(() => null)) as { id?: string; role?: string; active?: boolean } | null;
+  const body = (await request.json().catch(() => null)) as { id?: string; role?: string; active?: boolean; blocked?: boolean } | null;
   if (!body?.id) return json({ message: "User id is required." }, { status: 400 });
   const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.role && ["user", "marketing", "it_coordinator", "admin", "president"].includes(body.role)) payload.role = body.role;
   if (typeof body.active === "boolean") payload.active = body.active;
+  if (typeof body.blocked === "boolean") {
+    payload.blocked = body.blocked;
+    // Blocking a user also deactivates their session access.
+    if (body.blocked) payload.active = false;
+  }
   await supabaseJson(env, `/rest/v1/profiles?id=eq.${eq(body.id)}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
   await audit(env, access.user.email, "user.update", { id: body.id, ...payload });
   return json({ message: "User updated." });
+}
+
+async function handleOfficeBanIp(request: Request, env: WorkerEnv) {
+  const access = await requireOfficeAccess(request, env, "users");
+  if (!access.ok) return access.response;
+  const body = (await request.json().catch(() => null)) as { ip_address?: string; reason?: string; action?: "ban" | "unban" } | null;
+  const ip = body?.ip_address?.trim();
+  if (!ip) return json({ message: "IP address is required." }, { status: 400 });
+  if (body?.action === "unban") {
+    await supabaseJson(env, `/rest/v1/banned_ips?ip_address=eq.${eq(ip)}`, { method: "DELETE" });
+    await audit(env, access.user.email, "ip.unban", { ip_address: ip });
+    return json({ message: "IP address unbanned." });
+  }
+  await supabaseJson(env, "/rest/v1/banned_ips?on_conflict=ip_address", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates",
+    body: JSON.stringify({ ip_address: ip, reason: nullableString(body?.reason), created_by: access.user.email }),
+  });
+  await audit(env, access.user.email, "ip.ban", { ip_address: ip, reason: body?.reason ?? null });
+  return json({ message: "IP address banned." });
+}
+
+async function handleOfficeAuditDoc(request: Request, env: WorkerEnv) {
+  const access = await requireOfficeAccess(request, env, "audit");
+  if (!access.ok) return access.response;
+  if (request.method === "DELETE") {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id || !/^\d+$/.test(id)) return json({ message: "Invalid document id." }, { status: 400 });
+    await supabaseJson(env, `/rest/v1/audit_documents?id=eq.${id}`, { method: "DELETE" });
+    await audit(env, access.user.email, "audit_document.delete", { id });
+    return json({ message: "Audit document removed." });
+  }
+  const body = (await request.json().catch(() => null)) as { title?: string; description?: string; file_url?: string } | null;
+  if (!body?.title?.trim() || !body.file_url?.trim()) {
+    return json({ message: "Title and file URL are required." }, { status: 400 });
+  }
+  await supabaseJson(env, "/rest/v1/audit_documents", {
+    method: "POST",
+    body: JSON.stringify({
+      title: body.title.trim(),
+      description: nullableString(body.description),
+      file_url: body.file_url.trim(),
+      uploaded_by: access.user.email,
+    }),
+  });
+  await audit(env, access.user.email, "audit_document.upload", { title: body.title.trim() });
+  return json({ message: "Audit document uploaded." });
+}
+
+async function handleAnalyticsTrack(request: Request, env: WorkerEnv) {
+  if (request.method !== "POST") return json({ message: "Method not allowed" }, { status: 405 });
+  const ip = getClientIp(request);
+  if (ip) {
+    const banned = await supabaseJson<Array<{ id: number }>>(
+      env,
+      `/rest/v1/banned_ips?select=id&ip_address=eq.${eq(ip)}&limit=1`,
+    ).catch(() => []);
+    if (banned.length) return json({ banned: true }, { status: 403 });
+  }
+  const body = (await request.json().catch(() => null)) as { path?: string; referrer?: string; source?: string } | null;
+  const path = typeof body?.path === "string" ? body.path.slice(0, 300) : "/";
+  const user = await getCurrentUser(request, env);
+  await supabaseJson(env, "/rest/v1/page_views", {
+    method: "POST",
+    body: JSON.stringify({
+      path,
+      referrer: nullableString(body?.referrer),
+      source: nullableString(body?.source),
+      ip_address: ip,
+      user_email: user.email ?? null,
+      user_agent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
+    }),
+  }).catch(() => undefined);
+  // Record the visitor's most recent IP on their profile for moderation.
+  if (user.profile?.id && ip) {
+    await supabaseJson(env, `/rest/v1/profiles?id=eq.${eq(user.profile.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ last_ip: ip }),
+    }).catch(() => undefined);
+  }
+  return json({ ok: true });
 }
 
 function integerFromInput(value: unknown) {
@@ -1505,12 +1674,14 @@ async function handleOfficeAccess(request: Request, env: WorkerEnv) {
 async function handleOfficeAnnouncementSave(request: Request, env: WorkerEnv) {
   const access = await requireOfficeAccess(request, env, "announcements");
   if (!access.ok) return access.response;
-  const body = (await request.json().catch(() => null)) as { message?: string; active?: boolean } | null;
+  const body = (await request.json().catch(() => null)) as { message?: string; active?: boolean; audience?: string } | null;
+  const audience = body?.audience === "employees" ? "employees" : "site";
   await supabaseJson(env, "/rest/v1/site_announcements?id=eq.1", {
     method: "PATCH",
     body: JSON.stringify({
       message: body?.message ?? "",
       active: Boolean(body?.active),
+      audience,
       updated_by: access.user.email,
       updated_at: new Date().toISOString(),
     }),
@@ -2041,7 +2212,8 @@ async function handleApi(request: Request, env: WorkerEnv) {
   if (url.pathname === "/api/products") return handleProductsList(env);
   if (url.pathname === "/api/nightbloom") return handleNightbloomList(env);
   if (url.pathname === "/api/account") return handleAccountData(request, env);
-  if (url.pathname === "/api/announcement") return handleAnnouncement(env);
+  if (url.pathname === "/api/announcement") return handleAnnouncement(request, env);
+  if (url.pathname === "/api/analytics/track") return handleAnalyticsTrack(request, env);
   if (url.pathname === "/api/referral/capture") return handleReferralCapture(request);
   if (url.pathname === "/api/marketing/click") return handleMarketingClick(request, env);
   if (url.pathname === "/api/newsletter") return handleNewsletter(request, env);
@@ -2051,6 +2223,8 @@ async function handleApi(request: Request, env: WorkerEnv) {
   if (url.pathname === "/api/office/product") return handleOfficeProduct(request, env);
   if (url.pathname === "/api/office/marketing") return handleOfficeMarketing(request, env);
   if (url.pathname === "/api/office/user") return handleOfficeUser(request, env);
+  if (url.pathname === "/api/office/ban-ip") return handleOfficeBanIp(request, env);
+  if (url.pathname === "/api/office/audit-doc") return handleOfficeAuditDoc(request, env);
   if (url.pathname === "/api/office/rupees") return handleOfficeRupees(request, env);
   if (url.pathname === "/api/office/rupee-history") return handleOfficeRupeeHistory(request, env);
   if (url.pathname === "/api/office/access") return handleOfficeAccess(request, env);
