@@ -1,6 +1,6 @@
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { B as ArrowRight, C as Leaf, H as Sparkles, k as FlaskConical, l as Shield } from "../_libs/lucide-react.mjs";
+import { H as ArrowRight, T as Leaf, W as Sparkles, j as FlaskConical, u as Shield } from "../_libs/lucide-react.mjs";
 import { t as categories } from "./ssr.mjs";
 import { r as useLiveProducts } from "./cart-B4zVWcXf.mjs";
 import { t as ProductCard } from "./product-card-1z--9-bK.mjs";

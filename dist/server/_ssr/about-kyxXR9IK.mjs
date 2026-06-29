@@ -1,6 +1,6 @@
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { H as Sparkles } from "../_libs/lucide-react.mjs";
+import { W as Sparkles } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/about-kyxXR9IK.js
 var import_jsx_runtime = require_jsx_runtime();
 function About() {

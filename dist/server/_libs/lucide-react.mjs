@@ -597,6 +597,16 @@ var Minus = createLucideIcon("minus", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Moon = createLucideIcon("moon", [["path", {
+	d: "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401",
+	key: "kfwtm"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Package = createLucideIcon("package", [
 	["path", {
 		d: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z",
@@ -755,6 +765,16 @@ var ShoppingBasket = createLucideIcon("shopping-basket", [
 		key: "1ojof7"
 	}]
 ]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Star = createLucideIcon("star", [["path", {
+	d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
+	key: "r04s7s"
+}]]);
 /**
 * @license lucide-react v0.575.0 - ISC
 *
@@ -925,4 +945,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { FileText as A, ArrowRight as B, Leaf as C, Gift as D, Heart as E, ChevronDown as F, Sparkles as H, Briefcase as I, BookOpen as L, Copy as M, Command as N, Gem as O, Clock as P, Bell as R, Link2 as S, History as T, ChartColumn as U, Activity as V, Menu as _, UserCog as a, LogOut as b, ShoppingBag as c, ShieldCheck as d, Search as f, Minus as g, Package as h, Users as i, Download as j, FlaskConical as k, Shield as l, Plus as m, VolumeX as n, Trash2 as o, RotateCcw as p, Volume2 as r, ShoppingBasket as s, X as t, ShieldOff as u, MapPin as v, KeyRound as w, Lock as x, Mail as y, Ban as z };
+export { Gem as A, Bell as B, Lock as C, History as D, KeyRound as E, Command as F, ChartColumn as G, ArrowRight as H, Clock as I, ChevronDown as L, FileText as M, Download as N, Heart as O, Copy as P, Briefcase as R, LogOut as S, Leaf as T, Activity as U, Ban as V, Sparkles as W, Moon as _, UserCog as a, MapPin as b, ShoppingBasket as c, ShieldOff as d, ShieldCheck as f, Package as g, Plus as h, Users as i, FlaskConical as j, Gift as k, ShoppingBag as l, RotateCcw as m, VolumeX as n, Trash2 as o, Search as p, Volume2 as r, Star as s, X as t, Shield as u, Minus as v, Link2 as w, Mail as x, Menu as y, BookOpen as z };

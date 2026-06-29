@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { f as Search } from "../_libs/lucide-react.mjs";
+import { p as Search } from "../_libs/lucide-react.mjs";
 import { t as categories } from "./ssr.mjs";
 import { r as useLiveProducts } from "./cart-B4zVWcXf.mjs";
 import { t as ProductCard } from "./product-card-1z--9-bK.mjs";

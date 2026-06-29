@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
-import { I as Briefcase, P as Clock, t as X, v as MapPin } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/careers-lCw2R5PX.js
+import { I as Clock, R as Briefcase, b as MapPin, t as X } from "../_libs/lucide-react.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/careers-B6u2I3AN.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var jobs = [
@@ -87,6 +87,38 @@ var jobs = [
 function Careers() {
 	const [active, setActive] = (0, import_react.useState)(null);
 	const [submitted, setSubmitted] = (0, import_react.useState)(false);
+	const [submitting, setSubmitting] = (0, import_react.useState)(false);
+	const [error, setError] = (0, import_react.useState)("");
+	async function submitApplication(event, job) {
+		event.preventDefault();
+		setError("");
+		setSubmitting(true);
+		const form = new FormData(event.currentTarget);
+		try {
+			const response = await fetch("/api/careers/apply", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					full_name: form.get("full_name"),
+					email: form.get("email"),
+					portfolio_url: form.get("portfolio_url"),
+					message: form.get("message"),
+					job_id: job.id,
+					job_title: job.title
+				})
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				setError(data.message || "Something went wrong. Please try again.");
+				return;
+			}
+			setSubmitted(true);
+		} catch {
+			setError("Could not reach the server. Please try again.");
+		} finally {
+			setSubmitting(false);
+		}
+	}
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "dark-page mx-auto max-w-5xl px-4 py-16",
 		children: [
@@ -145,6 +177,7 @@ function Careers() {
 							onClick: () => {
 								setActive(job);
 								setSubmitted(false);
+								setError("");
 							},
 							className: "mt-4 inline-flex rounded-md bg-forest px-4 py-2 text-sm font-semibold text-parchment hover:bg-forest/90",
 							children: "Apply"
@@ -188,37 +221,44 @@ function Careers() {
 							}, r))
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
-							onSubmit: (e) => {
-								e.preventDefault();
-								setSubmitted(true);
-							},
+							onSubmit: (e) => void submitApplication(e, active),
 							className: "mt-6 space-y-3",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 									required: true,
+									name: "full_name",
 									placeholder: "Full name",
 									className: "w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 									required: true,
 									type: "email",
+									name: "email",
 									placeholder: "Email",
 									className: "w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									name: "portfolio_url",
 									placeholder: "Link to portfolio or resume",
 									className: "w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
 									required: true,
+									name: "message",
 									placeholder: "Why this role calls to you",
 									rows: 4,
 									className: "w-full rounded-md border border-gold/40 bg-parchment px-3 py-2 text-sm outline-none focus:border-gold"
 								}),
+								error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive",
+									role: "alert",
+									children: error
+								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 									type: "submit",
-									className: "w-full rounded-md bg-forest px-4 py-2.5 font-semibold text-parchment hover:bg-forest/90",
-									children: "Send application"
+									disabled: submitting,
+									className: "w-full rounded-md bg-forest px-4 py-2.5 font-semibold text-parchment hover:bg-forest/90 disabled:opacity-60",
+									children: submitting ? "Sending..." : "Send application"
 								})
 							]
 						})

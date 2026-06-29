@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { C as Leaf, E as Heart, g as Minus, m as Plus, s as ShoppingBasket } from "../_libs/lucide-react.mjs";
+import { O as Heart, T as Leaf, c as ShoppingBasket, h as Plus, v as Minus } from "../_libs/lucide-react.mjs";
 import { a as cat_teas_default, c as cat_herbs_default, i as cat_oils_default, o as cat_tinctures_default, r as cat_kits_default, s as cat_flowers_default } from "./ssr.mjs";
 import { i as useProductImage, n as useCart, r as useLiveProducts } from "./cart-B4zVWcXf.mjs";
 import { t as Route } from "./product._slug-W7sejUHe.mjs";

@@ -5,7 +5,7 @@ import { E as init_globalthis, T as globalthis_default } from "../_libs/lodash+u
 import { t as createMiddleware } from "./createMiddleware-CS1UMm1J.mjs";
 import process from "node:process";
 import { AsyncLocalStorage } from "node:async_hooks";
-//#region node_modules/.nitro/vite/services/ssr/assets/server-BHOvdBkW.js
+//#region node_modules/.nitro/vite/services/ssr/assets/server-BuHf8DU7.js
 init_globalthis();
 require_react();
 var import_jsx_runtime = require_jsx_runtime();
@@ -2926,7 +2926,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-BZBFmPfH.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-Bwe7DCxn.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -4778,7 +4778,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-DMdT_wuf.mjs"),
+		import("./router-Dj96I4cH.mjs"),
 		import("./start-Cf505Vxb.mjs"),
 		import("./empty-plugin-adapters-Br_mqi0s.mjs")
 	]);

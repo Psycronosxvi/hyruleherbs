@@ -1,9 +1,9 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { A as FileText, L as BookOpen, N as Command, R as Bell, S as Link2, T as History, U as ChartColumn, V as Activity, a as UserCog, c as ShoppingBag, d as ShieldCheck, g as Minus, h as Package, i as Users, m as Plus, t as X, u as ShieldOff, w as KeyRound, z as Ban } from "../_libs/lucide-react.mjs";
+import { B as Bell, D as History, E as KeyRound, F as Command, G as ChartColumn, M as FileText, R as Briefcase, U as Activity, V as Ban, a as UserCog, d as ShieldOff, f as ShieldCheck, g as Package, h as Plus, i as Users, l as ShoppingBag, t as X, v as Minus, w as Link2, z as BookOpen } from "../_libs/lucide-react.mjs";
 import { a as Bar, i as CartesianGrid, n as YAxis, o as ResponsiveContainer, r as XAxis, s as Tooltip, t as BarChart } from "../_libs/recharts+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/office-BUP-JmHT.js
+//#region node_modules/.nitro/vite/services/ssr/assets/office-3-Ez6cUb.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var tabDefs = [
@@ -71,6 +71,11 @@ var tabDefs = [
 		id: "analytics",
 		label: "Analytics",
 		icon: Activity
+	},
+	{
+		id: "guild",
+		label: "Guild",
+		icon: Briefcase
 	}
 ];
 var officeTabOptions = tabDefs.map((tab) => tab.id);
@@ -195,6 +200,11 @@ function Office() {
 					}),
 					tab === "revenue" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Revenue, { orders: data.orders }),
 					tab === "analytics" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Analytics, { analytics: data.analytics }),
+					tab === "guild" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Guild, {
+						applications: data.guildApplications,
+						refresh,
+						setMessage
+					}),
 					message && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "rounded-md border border-gold/40 bg-forest px-4 py-3 text-sm text-parchment",
 						children: message
@@ -537,6 +547,117 @@ function Orders({ orders, products }) {
 				})]
 			})
 		})
+	});
+}
+var guildStatuses = [
+	"new",
+	"reviewing",
+	"contacted",
+	"archived"
+];
+function Guild({ applications, refresh, setMessage }) {
+	const [filter, setFilter] = (0, import_react.useState)("all");
+	const [expanded, setExpanded] = (0, import_react.useState)(null);
+	const counts = (0, import_react.useMemo)(() => {
+		const map = { all: applications.length };
+		for (const status of guildStatuses) map[status] = 0;
+		for (const app of applications) map[app.status] = (map[app.status] ?? 0) + 1;
+		return map;
+	}, [applications]);
+	const shown = (0, import_react.useMemo)(() => filter === "all" ? applications : applications.filter((app) => app.status === filter), [applications, filter]);
+	async function updateStatus(id, status) {
+		const response = await fetch("/api/office/guild", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				id,
+				status
+			})
+		});
+		setMessage((await response.json().catch(() => ({}))).message || (response.ok ? "Application updated." : "Could not update application."));
+		await refresh();
+	}
+	async function remove(id) {
+		if (!confirm("Remove this application permanently?")) return;
+		const response = await fetch(`/api/office/guild?id=${id}`, { method: "DELETE" });
+		setMessage((await response.json().catch(() => ({}))).message || (response.ok ? "Application removed." : "Could not remove application."));
+		await refresh();
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
+		title: "Guild Applications",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "mb-4 flex flex-wrap gap-2",
+			children: ["all", ...guildStatuses].map((status) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				onClick: () => setFilter(status),
+				className: `rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest ${filter === status ? "bg-gold text-forest" : "bg-parchment-dark/40 text-forest hover:bg-parchment-dark/60"}`,
+				children: [
+					status,
+					" (",
+					counts[status] ?? 0,
+					")"
+				]
+			}, status))
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-3",
+			children: [shown.map((app) => {
+				const open = expanded === app.id;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-md border border-gold/25 bg-parchment/70 p-4",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-wrap items-start justify-between gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => setExpanded(open ? null : app.id),
+							className: "text-left",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "font-semibold text-forest",
+									children: app.full_name
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-xs text-muted-foreground",
+									children: [app.email, app.job_title ? ` · ${app.job_title}` : ""]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-1 text-[11px] uppercase tracking-widest text-muted-foreground",
+									children: new Date(app.created_at).toLocaleDateString()
+								})
+							]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+								value: app.status,
+								onChange: (event) => void updateStatus(app.id, event.target.value),
+								className: "rounded-md border border-gold/40 bg-parchment px-2 py-1 text-xs text-forest",
+								children: guildStatuses.map((status) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: status,
+									children: status
+								}, status))
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								onClick: () => void remove(app.id),
+								className: "rounded-md border border-gold/40 p-1.5 text-forest hover:bg-parchment-dark/40",
+								"aria-label": "Remove application",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-4 w-4" })
+							})]
+						})]
+					}), open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 space-y-2 border-t border-gold/20 pt-3 text-sm text-forest",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "whitespace-pre-wrap",
+							children: app.message
+						}), app.portfolio_url && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+							href: app.portfolio_url,
+							target: "_blank",
+							rel: "noreferrer",
+							className: "inline-flex items-center gap-1 text-sm font-semibold text-forest underline",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link2, { className: "h-4 w-4" }), " Portfolio"]
+						})]
+					})]
+				}, app.id);
+			}), shown.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "rounded-md border border-gold/25 bg-parchment/70 p-4 text-sm text-muted-foreground",
+				children: "No applications in this view."
+			})]
+		})]
 	});
 }
 function Marketing({ data, refresh, setMessage }) {

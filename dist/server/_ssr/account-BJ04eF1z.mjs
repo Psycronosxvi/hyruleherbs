@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { H as Sparkles, M as Copy, O as Gem, b as LogOut, c as ShoppingBag, d as ShieldCheck } from "../_libs/lucide-react.mjs";
+import { A as Gem, P as Copy, S as LogOut, W as Sparkles, f as ShieldCheck, l as ShoppingBag } from "../_libs/lucide-react.mjs";
 import { n as useSession, t as refreshSession } from "./session-1jcq4G_V.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/account-BJ04eF1z.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

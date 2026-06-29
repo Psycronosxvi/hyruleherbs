@@ -1,6 +1,6 @@
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { E as Heart, m as Plus } from "../_libs/lucide-react.mjs";
+import { O as Heart, h as Plus } from "../_libs/lucide-react.mjs";
 import { i as useProductImage, n as useCart } from "./cart-B4zVWcXf.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/product-card-1z--9-bK.js
 var import_jsx_runtime = require_jsx_runtime();

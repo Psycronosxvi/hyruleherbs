@@ -1,7 +1,7 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { d as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { g as Minus, m as Plus, o as Trash2, s as ShoppingBasket } from "../_libs/lucide-react.mjs";
+import { c as ShoppingBasket, h as Plus, o as Trash2, v as Minus } from "../_libs/lucide-react.mjs";
 import { i as useProductImage, n as useCart } from "./cart-B4zVWcXf.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/cart-DQKk3ThE.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
